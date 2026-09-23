@@ -74,7 +74,42 @@ export function kompensasiOrang(daftar, H, barang = []) {
     if (b.oleh && byId[b.oleh]) { byId[b.oleh].ambil += v; byId[b.oleh].barang.push(b.nama || 'Barang'); }
     else belumDipilih += v;
   });
-  penerima.forEach(p => { p.selisih = p.hak - p.ambil; });
+  penerima.forEach(p => {
+    p.selisih = p.hak - p.ambil;
+    // kurang = nilai barang di bawah hak (menerima uang); lebih = di atas hak (membayar uang)
+    p.status = Math.abs(p.selisih) < 1 ? 'pas' : p.selisih > 0 ? 'kurang' : 'lebih';
+  });
   const adaEmas = barang.some(b => /emas|perhiasan|logam mulia/i.test(b.nama || ''));
-  return { penerima, totalBarang, belumDipilih, cocok: Math.abs(totalBarang - int(H)) <= penerima.length, adaEmas };
+  return {
+    penerima, totalBarang, belumDipilih, adaEmas,
+    cocok: Math.abs(totalBarang - int(H)) <= penerima.length,
+    ...rencanaBayar(penerima),
+  };
+}
+
+/**
+ * Siapa membayar ke siapa agar semua selisih tertutup, dengan jumlah transfer sesedikit mungkin
+ * (yang kelebihannya paling besar dipasangkan dengan yang kekurangannya paling besar).
+ * - `dariSisa`: kekurangan yang tidak tertutup pembayaran ahli waris lain, jadi diambil dari
+ *   harta yang belum dibagi (uang tunai atau barang yang belum dipilih).
+ * - `kelebihanLepas`: kelebihan yang tidak punya pasangan, artinya nilai barang yang dipilih
+ *   melebihi harta bersih (taksiran perlu dicek).
+ * Selisih kecil karena pembulatan rupiah (kurang dari jumlah orang) diabaikan.
+ */
+export function rencanaBayar(penerima) {
+  const toleransi = penerima.length;
+  const bayar = penerima.filter(p => p.selisih < 0).map(p => ({ p, sisa: -p.selisih })).sort((a, b) => b.sisa - a.sisa);
+  const terima = penerima.filter(p => p.selisih > 0).map(p => ({ p, sisa: p.selisih })).sort((a, b) => b.sisa - a.sisa);
+  const transfer = [];
+  let i = 0, j = 0;
+  while (i < bayar.length && j < terima.length) {
+    const n = Math.min(bayar[i].sisa, terima[j].sisa);
+    if (n > 0) transfer.push({ dari: bayar[i].p.id, dariLabel: bayar[i].p.label, ke: terima[j].p.id, keLabel: terima[j].p.label, jumlah: n });
+    bayar[i].sisa -= n; terima[j].sisa -= n;
+    if (bayar[i].sisa === 0) i++;
+    if (terima[j].sisa === 0) j++;
+  }
+  const dariSisa = terima.filter(t => t.sisa > toleransi).map(t => ({ ke: t.p.id, keLabel: t.p.label, jumlah: t.sisa }));
+  const kelebihanLepas = bayar.filter(b => b.sisa > toleransi).map(b => ({ dari: b.p.id, dariLabel: b.p.label, jumlah: b.sisa }));
+  return { transfer, dariSisa, kelebihanLepas };
 }

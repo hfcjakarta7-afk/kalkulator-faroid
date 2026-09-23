@@ -5,6 +5,7 @@ import { rp, parseRp, fmtAngka, esc } from './format.js';
 import { renderHasil, renderPreview, teksRingkasan, KEADAAN_KHUSUS, namaAkhir } from './hasil.js';
 import { renderBeritaAcara, baKosong, setBa, pasangPadTtd } from './berita-acara.js';
 import { buatLink, bacaLink } from './tautan.js';
+import { renderPanduan } from './panduan.js';
 import * as store from './storage.js';
 
 const $ = sel => document.querySelector(sel);
@@ -308,11 +309,13 @@ function renderBa() {
   $('#ba-isi').innerHTML = renderBeritaAcara(state, hasil, hb, m);
 }
 function setView(v, { scroll = true } = {}) {
-  state.view = v === 'ba' ? 'ba' : 'form';
+  state.view = ['ba', 'panduan'].includes(v) ? v : 'form';
   const ba = state.view === 'ba';
   document.body.dataset.view = state.view;
   $('#ba-view').hidden = !ba;
+  $('#pd-view').hidden = state.view !== 'panduan';
   if (ba) renderBa();
+  if (state.view === 'panduan' && !$('#pd-isi').innerHTML) $('#pd-isi').innerHTML = renderPanduan();
   save();
   if (scroll) window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -321,6 +324,15 @@ $('#btn-ba').addEventListener('click', () => {
   setView('ba');
 });
 $('#ba-kembali').addEventListener('click', () => setView('form'));
+// ---------- buku panduan ----------
+$('#btn-panduan').addEventListener('click', () => setView('panduan'));
+$('#foot-panduan').addEventListener('click', () => setView('panduan'));
+$('#pd-kembali').addEventListener('click', () => setView('form'));
+$('#pd-isi').addEventListener('click', e => {
+  const a = e.target.closest('[data-pd]'); if (!a) return;
+  e.preventDefault(); // jangan ubah # di alamat (dipakai untuk link kasus)
+  document.getElementById('pd-' + a.dataset.pd)?.scrollIntoView({ behavior: 'smooth' });
+});
 $('#ba-cetak').addEventListener('click', () => window.print());
 // isian teks: simpan tanpa menggambar ulang supaya kursor tidak lompat
 $('#ba-isi').addEventListener('input', e => {

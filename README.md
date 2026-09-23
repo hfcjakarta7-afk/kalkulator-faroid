@@ -24,6 +24,8 @@ npm run preview   # mencoba hasil build (termasuk mode offline)
 - Munāsakhah berlapis (ahli waris wafat sebelum harta dibagi, Bab 13) dengan asal masalah gabungan (al-jāmiʿah).
 - Link kasus yang bisa dibagikan: siapa pun yang membukanya melihat perhitungan yang sama. Data ada di bagian `#` link, tidak terkirim ke server.
 - Formulir Berita Acara Pembagian Harta Warisan (Lampiran E): terisi otomatis, tanda tangan di layar HP, siap cetak.
+- Harta berupa barang: tiap ahli waris ditandai KURANG (menerima uang pengganti) atau LEBIH (membayar), plus daftar siapa membayar ke siapa.
+- Buku panduan di dalam aplikasi (ikon buku) + PDF `public/panduan/Panduan-Kalkulator-FAROID.pdf`. Buat ulang gambar & PDF: jalankan `npm run dev`, lalu `npm run panduan`.
 - Bagikan ringkasan (WhatsApp), cetak/PDF, riwayat kasus di perangkat, mode gelap.
 - PWA: bisa dipasang di HP dan dipakai tanpa internet.
 

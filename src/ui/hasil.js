@@ -162,14 +162,41 @@ function renderBarang(state, penerima, H) {
   const k = kompensasiOrang(penerima, H, b2);
   const sel = (b, i) => `<select data-barang-oleh="${i}" aria-label="Diambil oleh (${esc(b.nama || 'barang')})">
     <option value="">— belum dipilih —</option>${penerima.map(o => `<option value="${o.id}"${o.id === b.oleh ? ' selected' : ''}>${esc(o.label)}</option>`).join('')}</select>`;
-  return `<div class="sec no-break"><h3>Pembagian barang dan kompensasi ${babLink('10.6')}</h3>
-    <p class="sub">Pilih siapa yang mengambil tiap barang. Selisih antara hak dan nilai barang ditutup dengan uang pengganti.</p>
+  const nama = p => { const n = state.ba?.nama?.[p.id]; return n ? `${esc(n)} <small>(${esc(p.label)})</small>` : esc(p.label); };
+  const namaPolos = (id, label) => { const n = state.ba?.nama?.[id]; return n ? `${n} (${label})` : label; };
+  const kurang = k.penerima.filter(p => p.status === 'kurang'), lebih = k.penerima.filter(p => p.status === 'lebih');
+  const jml = list => list.reduce((a, p) => a + Math.abs(p.selisih), 0);
+  const kartu = k.penerima.map(p => {
+    // kurang/pas: batang = barang ÷ hak. lebih: batang penuh = barang, bagian bergaris = kelebihannya
+    const lebihDariHak = p.ambil > p.hak;
+    const persen = lebihDariHak ? p.hak / p.ambil * 100 : p.hak ? p.ambil / p.hak * 100 : 0;
+    const lewat = lebihDariHak ? 100 - persen : 0;
+    const badge = p.status === 'pas' ? `<span class="kl-badge pas">PAS</span>`
+      : p.status === 'kurang' ? `<span class="kl-badge kurang">KURANG ${rp(p.selisih)}</span><small>menerima uang pengganti</small>`
+        : `<span class="kl-badge lebih">LEBIH ${rp(-p.selisih)}</span><small>membayar uang pengganti</small>`;
+    return `<div class="kl kl-${p.status}">
+      <div class="kl-nama">${nama(p)}<small>${p.barang.length ? esc(p.barang.join(', ')) : 'Belum mengambil barang'}</small></div>
+      <div class="kl-status">${badge}</div>
+      <div class="kl-angka"><span>Hak ${rp(p.hak)}</span><span>Barang ${rp(p.ambil)}</span></div>
+      <div class="kl-bar" aria-hidden="true"><i style="width:${persen.toFixed(1)}%"></i>${lewat ? `<b style="width:${lewat.toFixed(1)}%"></b>` : ''}</div>
+    </div>`;
+  }).join('');
+  const langkahBayar = [
+    ...k.transfer.map(t => `<li><b>${esc(namaPolos(t.dari, t.dariLabel))}</b> membayar <b>${rp(t.jumlah)}</b> kepada <b>${esc(namaPolos(t.ke, t.keLabel))}</b></li>`),
+    ...k.dariSisa.map(t => `<li><b>${esc(namaPolos(t.ke, t.keLabel))}</b> menerima <b>${rp(t.jumlah)}</b> dari sisa harta (uang tunai atau barang yang belum dibagi)</li>`),
+  ];
+  return `<div class="sec no-break" id="barang-hasil"><h3>Pembagian barang dan kompensasi ${babLink('10.6')}</h3>
+    <p class="sub">Pilih siapa yang mengambil tiap barang. Jika nilai barang yang diambil tidak sama dengan haknya, selisihnya ditutup dengan uang pengganti.</p>
     <div class="tablewrap"><table><thead><tr><th>Barang</th><th class="num">Nilai</th><th>Diambil oleh</th></tr></thead><tbody>
       ${b2.map((b, i) => `<tr><td>${esc(b.nama || 'Barang ' + (i + 1))}</td><td class="num">${rp(b.nilai)}</td><td>${sel(b, i)}</td></tr>`).join('')}
     </tbody></table></div>
-    <div class="tablewrap" style="margin-top:12px"><table><thead><tr><th>Ahli waris</th><th class="num">Hak</th><th class="num">Nilai barang</th><th class="num">Selisih</th></tr></thead><tbody>
-      ${k.penerima.map(p => `<tr><td>${esc(p.label)}</td><td class="num">${rp(p.hak)}</td><td class="num">${rp(p.ambil)}</td><td class="num">${Math.abs(p.selisih) < 1 ? 'Pas' : p.selisih > 0 ? `<span class="recv">Menerima ${rp(p.selisih)}</span>` : `<span class="pay">Membayar ${rp(-p.selisih)}</span>`}</td></tr>`).join('')}
-    </tbody></table></div>
+    <div class="summary kl-ringkas">
+      <div class="chip kl-chip-kurang"><span>Kurang (menerima)</span><b>${kurang.length} orang · ${rp(jml(kurang))}</b></div>
+      <div class="chip kl-chip-lebih"><span>Lebih (membayar)</span><b>${lebih.length} orang · ${rp(jml(lebih))}</b></div>
+    </div>
+    <div class="kl-list">${kartu}</div>
+    ${langkahBayar.length ? `<div class="kl-bayar"><h4>Siapa membayar ke siapa</h4><ol>${langkahBayar.join('')}</ol></div>` : `<p class="sub">Semua ahli waris sudah pas dengan haknya. Tidak ada uang pengganti.</p>`}
+    ${k.kelebihanLepas.length ? `<p class="warn-text">Nilai barang yang diambil melebihi harta bersih: ${k.kelebihanLepas.map(x => `${esc(namaPolos(x.dari, x.dariLabel))} ${rp(x.jumlah)}`).join(', ')} tidak punya pasangan pembayaran. Periksa lagi taksiran barang, utang, dan wasiat.</p>` : ''}
     ${k.belumDipilih ? `<p class="warn-text">Barang senilai ${rp(k.belumDipilih)} belum dipilih penerimanya.</p>` : ''}
     ${!k.cocok ? `<p class="warn-text">Total nilai barang (${rp(k.totalBarang)}) belum sama dengan harta bersih (${rp(H)}). Pastikan semua harta sudah tercatat dan utang/wasiat sudah diperhitungkan.</p>` : ''}
     ${k.adaEmas ? `<p class="sub" style="margin-top:8px">Jika emas ditukar dengan uang dalam kompensasi, pembayarannya harus tunai saat itu juga (HR. Muslim no. 1587, Bab 10.6).</p>` : ''}
@@ -198,6 +225,7 @@ export function teksRingkasan(state, hasil, hb, m = null) {
   if (m) {
     L.push(`Munāsakhah ${m.lapis.length + 1} lapis (${m.lapis.map(l => `${l.wafatLabel} wafat`).join(', ')}), al-jāmiʿah ${m.J}`, '');
     m.orang.filter(o => o.saham > 0).forEach(o => L.push(`• ${namaAkhir(o, m)}: ${o.saham}/${m.J}${H ? ` = ${rp(bagianRupiah(H, o.each))}` : ''}`));
+    L.push(...teksBarang(state, penerimaAkhir(hasil, m), H));
     L.push('', 'Fiqih mazhab Syafiʿi (Bab 13). Untuk edukasi; untuk sengketa rujuk ahli faraid atau Pengadilan Agama.');
     return L.join('\n');
   }
@@ -210,8 +238,25 @@ export function teksRingkasan(state, hasil, hb, m = null) {
   const coret = hasil.rows.filter(r => r.blocked);
   if (coret.length) L.push('', 'Terhalang: ' + coret.map(r => `${r.label} (oleh ${r.by})`).join('; '));
   if (hasil.mahrum.length) L.push('Maḥrūm: ' + hasil.mahrum.map(m => `${m.label} (${m.alasan.toLowerCase()})`).join('; '));
+  L.push(...teksBarang(state, penerimaAkhir(hasil, null), H));
   L.push('', 'Fiqih mazhab Syafiʿi. Untuk edukasi; untuk sengketa rujuk ahli faraid atau Pengadilan Agama.');
   return L.join('\n');
+}
+
+/** Baris teks kurang/lebih + siapa membayar ke siapa (kosong bila tidak ada barang) */
+function teksBarang(state, penerima, H) {
+  if (!H || !(state.barang || []).length) return [];
+  const adaM = penerima.some(p => p.id.includes(':'));
+  const k = kompensasiOrang(penerima, H, state.barang.map(b => ({ ...b, oleh: normOleh(b.oleh, adaM) })));
+  const nm = (id, label) => (state.ba?.nama?.[id] ? `${state.ba.nama[id]} (${label})` : label);
+  const L = ['', '*Pembagian barang*'];
+  k.penerima.forEach(p => L.push(`• ${nm(p.id, p.label)}: ${p.barang.join(', ') || '—'} · ${p.status === 'pas' ? 'PAS' : p.status === 'kurang' ? `KURANG ${rp(p.selisih)}` : `LEBIH ${rp(-p.selisih)}`}`));
+  if (k.transfer.length || k.dariSisa.length) {
+    L.push('', '*Uang pengganti*');
+    k.transfer.forEach(t => L.push(`• ${nm(t.dari, t.dariLabel)} → ${nm(t.ke, t.keLabel)}: ${rp(t.jumlah)}`));
+    k.dariSisa.forEach(t => L.push(`• ${nm(t.ke, t.keLabel)} menerima ${rp(t.jumlah)} dari sisa harta`));
+  }
+  return L;
 }
 
 export { fmtAngka };

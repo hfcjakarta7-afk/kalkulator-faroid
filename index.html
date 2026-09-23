@@ -28,6 +28,9 @@
       <div class="toolbar">
         <label class="sr-only" for="preset">Muat contoh kasus</label>
         <select id="preset" class="on-dark"></select>
+        <button type="button" class="icon-btn on-dark" id="btn-panduan" aria-label="Buku panduan" title="Buku panduan">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 5v16M9 7h6M9 11h6"/></svg>
+        </button>
         <button type="button" class="icon-btn on-dark" id="btn-riwayat" aria-label="Riwayat kasus" title="Riwayat kasus">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8v4l3 2M3.05 11a9 9 0 1 1 .5 4M3 4v5h5"/></svg>
         </button>
@@ -157,6 +160,14 @@
       <div id="ba-isi"></div>
     </section>
 
+    <section class="card pd-view" id="pd-view" aria-labelledby="pd-judul" hidden>
+      <div class="ba-bar no-print">
+        <button type="button" class="btn ghost" id="pd-kembali">← Kembali ke kalkulator</button>
+        <a class="btn" href="./panduan/Panduan-Kalkulator-FAROID.pdf" download>Unduh PDF</a>
+      </div>
+      <div id="pd-isi"></div>
+    </section>
+
     <aside class="preview no-print" aria-label="Ringkasan sementara">
       <div class="card">
         <p class="eyebrow">Ringkasan sementara</p>
@@ -166,6 +177,7 @@
   </main>
 
   <footer class="foot">
+    <p class="no-print" style="margin-bottom:8px"><button type="button" class="linkish" id="foot-panduan">📖 Buka buku panduan penggunaan</button></p>
     <p><b>Untuk edukasi.</b> Kalkulator ini mengikuti fiqih mazhab Syafi'i sebagaimana dijelaskan di ebook (Bab 4–13); KHI ditampilkan sebagai pembanding. Kasus <i>muʿāddah</i>, <i>dzawil arḥām</i>, anak dalam kandungan, orang hilang, <i>khuntsā</i>, dan <i>munāsakhah</i> belum dihitung otomatis. Untuk pembagian resmi atau sengketa, konsultasikan dengan ahli faraid atau Pengadilan Agama.</p>
   </footer>
 

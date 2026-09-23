@@ -75,6 +75,26 @@ describe('kompensasi barang (Bab 10.6)', () => {
   });
 });
 
+describe('kurang/lebih dan rencana bayar', () => {
+  const r = hitung({ pewaris: 'L', heirs: { istri: 1, anakL: 2, anakP: 1 } }); // hak: 150 / 420 / 420 / 210 (juta)
+  it('sebagian harta berupa uang yang tidak dicatat sebagai barang: kekurangan diambil dari sisa harta', () => {
+    const k = kompensasi(r, 1200e6, [{ nama: 'Rumah', nilai: 600e6, oleh: 'anakL#1' }]);
+    expect(k.transfer).toEqual([{ dari: 'anakL#1', dariLabel: 'Anak laki-laki 1', ke: 'anakL#2', keLabel: 'Anak laki-laki 2', jumlah: 180e6 }]);
+    // sisanya (anakL#2 masih kurang 240 jt, istri 150 jt, anakP 210 jt) dari uang/harta yang belum dibagi
+    expect(k.dariSisa.map(x => [x.ke, x.jumlah])).toEqual([['anakL#2', 240e6], ['anakP#1', 210e6], ['istri#1', 150e6]]);
+    expect(k.kelebihanLepas).toEqual([]);
+  });
+  it('nilai barang melebihi harta bersih: kelebihan tanpa pasangan dilaporkan', () => {
+    const k = kompensasi(r, 1200e6, [{ nama: 'Rumah', nilai: 1300e6, oleh: 'istri#1' }]);
+    expect(k.kelebihanLepas).toEqual([{ dari: 'istri#1', dariLabel: 'Istri', jumlah: 100e6 }]);
+  });
+  it('jumlah semua transfer + dari sisa = jumlah semua kekurangan', () => {
+    const k = kompensasi(r, 1200e6, [{ nama: 'A', nilai: 700e6, oleh: 'istri#1' }, { nama: 'B', nilai: 500e6, oleh: 'anakP#1' }]);
+    const kurang = k.penerima.filter(p => p.selisih > 0).reduce((a, p) => a + p.selisih, 0);
+    expect(k.transfer.reduce((a, t) => a + t.jumlah, 0) + k.dariSisa.reduce((a, t) => a + t.jumlah, 0)).toBe(kurang);
+  });
+});
+
 describe('maḥrūm (Bab 2.5)', () => {
   it('anak beda agama tidak menerima dan tidak menghalangi saudara', () => {
     const r = hitung({ pewaris: 'L', heirs: { istri: 1, sdrLK: 1 }, mahrum: [{ key: 'anakL', n: 1, sebab: 'agama' }] });

@@ -48,7 +48,7 @@ export function renderBeritaAcara(state, hasil, hb, m) {
 
   const barangRows = k
     ? k.penerima.map((p, i) => `<tr><td>${i + 1}</td><td>${esc(namaOf(p) || p.label)}</td><td>${esc(p.barang.join(', ') || '—')}</td><td class="num">${rp(p.ambil)}</td>
-        <td class="num">${Math.abs(p.selisih) < 1 ? 'Pas' : p.selisih > 0 ? `Menerima ${rp(p.selisih)}` : `Membayar ${rp(-p.selisih)}`}</td><td>${Math.abs(p.selisih) < 1 ? '' : `<textarea class="ba-in ba-mini" rows="2" data-ba="bayar.${p.id}" placeholder="tunai / cicil s.d. …" aria-label="Cara dan waktu pembayaran">${esc(ba.bayar[p.id] || '')}</textarea>`}</td></tr>`).join('')
+        <td class="num">${p.status === 'pas' ? 'Pas' : p.status === 'kurang' ? `Kurang ${rp(p.selisih)}<small>menerima</small>` : `Lebih ${rp(-p.selisih)}<small>membayar</small>`}</td><td>${Math.abs(p.selisih) < 1 ? '' : `<textarea class="ba-in ba-mini" rows="2" data-ba="bayar.${p.id}" placeholder="tunai / cicil s.d. …" aria-label="Cara dan waktu pembayaran">${esc(ba.bayar[p.id] || '')}</textarea>`}</td></tr>`).join('')
     : `<tr><td colspan="6">Harta dibagi dalam bentuk uang sesuai nilai hak di tabel 3.</td></tr>`;
 
   const tglWafatLapis = m ? `<p class="ba-cat">Ahli waris yang wafat sebelum harta dibagi (munāsakhah): ${m.lapis.map(l => esc(l.wafatLabel)).join(', ')}. Bagiannya sudah berpindah kepada ahli warisnya (Bab 13).</p>` : '';
@@ -82,6 +82,10 @@ export function renderBeritaAcara(state, hasil, hb, m) {
     <h3 class="ba-h3">4. Pembagian barang dan kompensasi</h3>
     <table class="ba-t"><thead><tr><th>No.</th><th>Nama ahli waris</th><th>Barang yang diterima</th><th class="num">Nilai barang</th><th class="num">Kompensasi</th><th>Cara dan waktu pembayaran</th></tr></thead>
       <tbody>${barangRows}</tbody></table>
+    ${k && (k.transfer.length || k.dariSisa.length) ? `<p class="ba-p ba-bayar">Uang pengganti: ${[
+      ...k.transfer.map(t => `${esc(ba.nama[t.dari] || t.dariLabel)} membayar ${rp(t.jumlah)} kepada ${esc(ba.nama[t.ke] || t.keLabel)}`),
+      ...k.dariSisa.map(t => `${esc(ba.nama[t.ke] || t.keLabel)} menerima ${rp(t.jumlah)} dari sisa harta`),
+    ].join('; ')}.</p>` : ''}
 
     <h3 class="ba-h3">5. Kesepakatan lain</h3>
     <textarea class="ba-in ba-area" data-ba="kesepakatan" rows="3" placeholder="Misalnya: ahli waris yang merelakan sebagian haknya, harta yang tetap dimiliki bersama beserta persentasenya, atau pemberian kepada kerabat yang tidak mendapat warisan.">${esc(ba.kesepakatan || '')}</textarea>

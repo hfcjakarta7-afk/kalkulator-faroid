@@ -29,6 +29,11 @@ describe('rupiah Bab 14', () => {
     const k = kompensasi(r, H, p.barang);
     const s = Object.fromEntries(k.penerima.map(x => [x.id, x.selisih]));
     expect(s).toEqual({ 'istri#1': 0, 'anakL#1': -80e6, 'anakP#1': -60e6, 'anakP#2': 140e6 });
+    expect(Object.fromEntries(k.penerima.map(x => [x.id, x.status]))).toEqual({ 'istri#1': 'pas', 'anakL#1': 'lebih', 'anakP#1': 'lebih', 'anakP#2': 'kurang' });
+    // seperti di ebook: Hana menerima Rp 80 jt dari Fajar + Rp 60 jt dari Gita
+    expect(k.transfer.map(t => [t.dari, t.ke, t.jumlah])).toEqual([['anakL#1', 'anakP#2', 80e6], ['anakP#1', 'anakP#2', 60e6]]);
+    expect(k.dariSisa).toEqual([]);
+    expect(k.kelebihanLepas).toEqual([]);
   });
   it('Kasus 8 (anak beda agama maḥrūm)', () => {
     const { per, r } = rupiah(preset('Bab 14 · Kasus 8'));

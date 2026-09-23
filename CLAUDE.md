@@ -39,3 +39,5 @@ Pemilik project: Kang Nardi (programmer). Bahasa diskusi: Indonesia santai; isti
 - Commit kecil dan jelas (bahasa Indonesia boleh). Jangan push ke remote tanpa diminta.
 - Label UI & pesan untuk orang awam: bahasa Indonesia sederhana, istilah Arab ditulis dengan artinya, contoh: *'aṣabah* (penerima sisa).
 - Disclaimer tetap tampil: hasil untuk edukasi; untuk sengketa rujuk ahli faraid / Pengadilan Agama.
+9. ✅ Kurang/lebih barang + rencana bayar (`rencanaBayar` di `src/engine/harta.js`).
+10. ✅ Buku panduan (`src/ui/panduan.js`, satu sumber untuk halaman & PDF). Setelah mengubah tampilan: `npm run dev` lalu `npm run panduan` untuk memperbarui gambar & PDF.
