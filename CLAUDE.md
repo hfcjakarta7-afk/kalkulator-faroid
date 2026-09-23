@@ -7,8 +7,8 @@ Pemilik project: Kang Nardi (programmer). Bahasa diskusi: Indonesia santai; isti
 - Rujukan utama: **fiqih mazhab Syafi'i**. **KHI** (Kompilasi Hukum Islam, Inpres 1/1991) hanya sebagai **catatan pembanding**, bukan dasar hitungan.
 - Radd: pasangan (suami/istri) **tidak** ikut radd (Syafi'i). KHI Ps. 193 hanya ditampilkan sebagai catatan.
 - Kakek + saudara: pendapat Zaid bin Tsabit (pilih yang terbaik bagi kakek: muqasamah / 1/3 / 1/6 sesuai keadaan).
-- Kasus khusus yang sudah ditangani: 'aul, radd, tashih, gharrawain ('umariyyatain), musyarakah, akdariyyah.
-- Belum otomatis (tampilkan peringatan, jangan menebak): mu'addah (baru disederhanakan), dzawil arham, anak dalam kandungan, mafqud, khuntsa, munasakhah.
+- Kasus khusus yang sudah ditangani: 'aul, radd, tashih, gharrawain ('umariyyatain), musyarakah, akdariyyah, munasakhah berlapis (Bab 13: S, A, FPB, al-jami'ah; orang yang sama antar lapis ditautkan, dengan saran otomatis yang bisa diubah pengguna).
+- Belum otomatis (tampilkan peringatan, jangan menebak): mu'addah (baru disederhanakan), dzawil arham, anak dalam kandungan, mafqud, khuntsa.
 - Urutan sebelum dibagi: pisahkan separuh harta bersama untuk pasangan yang hidup (KHI Ps. 96), lalu biaya jenazah → utang → wasiat (maks 1/3, bukan untuk ahli waris) → sisa dibagi waris.
 - Semua angka memakai **pecahan eksak** (tanpa floating point untuk bagian). Rupiah dibulatkan hanya di tampilan, dan selisih pembulatan harus dilaporkan.
 
@@ -30,6 +30,9 @@ Pemilik project: Kang Nardi (programmer). Bahasa diskusi: Indonesia santai; isti
 3. ✅ PWA offline (sudah diuji offline). ⏳ Deploy ke GitHub Pages: workflow siap di `.github/workflows/deploy.yml`, tinggal repo + push.
 4. ⏳ Android: bungkus PWA dengan TWA (Bubblewrap) atau Capacitor — belakangan.
 5. ✅ Fitur: penjelasan tujuh langkah (merujuk bab ebook), pembagian barang + kompensasi, maḥrūm (Bab 2.5), peringatan keadaan khusus, bagikan (Web Share/salin), cetak/PDF, riwayat lokal, draf otomatis.
+6. ✅ Munāsakhah berlapis (`src/engine/munasakhah.js`, test `test/munasakhah.test.js`: Pak Rahmat Bab 13.3 & Bab 14 Kasus 10).
+7. ✅ Link kasus (`src/ui/tautan.js`): data di hash `#k=` (tidak terkirim ke server); isian berita acara & tanda tangan TIDAK ikut link.
+8. ✅ Berita acara Lampiran E (`src/ui/berita-acara.js`): terisi otomatis, nama ahli waris, tanda tangan di layar (canvas → PNG di `state.ba.ttd`), cetak/PDF.
 
 ## Konvensi
 - Windows, PowerShell. Node 24, npm 11, Git 2.55.

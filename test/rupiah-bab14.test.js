@@ -1,6 +1,6 @@
 // Angka rupiah contoh kasus harus sama dengan tabel di ebook Bab 14.
 import { describe, it, expect } from 'vitest';
-import { hitung, hartaBersih, bagiRupiah, kompensasi } from '../src/engine/index.js';
+import { hitung, hartaBersih, bagiRupiah, bagianRupiah, kompensasi, munasakhah, lapisEfektif } from '../src/engine/index.js';
 import { PRESETS } from '../src/ui/presets.js';
 
 const preset = awal => PRESETS.find(p => p.nama.startsWith(awal));
@@ -37,6 +37,20 @@ describe('rupiah Bab 14', () => {
     expect(r.denom).toBe(24);
   });
   it('Kasus 9', () => expect(rupiah(preset('Bab 14 · Kasus 9')).per).toEqual({ istri: 30e6, anakP: 120e6, cucuP: 40e6, sdrLK: 50e6 }));
+  it('Kasus 10 (munāsakhah, saran tautan otomatis): tiap anak Rp 100 juta', () => {
+    const p = preset('Bab 14 · Kasus 10');
+    const m1 = { pewaris: p.pw, heirs: p.heirs };
+    const m = munasakhah(m1, lapisEfektif(m1, p.lapis));
+    const hidup = m.orang.filter(o => o.saham > 0);
+    expect(hidup.map(o => [o.id, bagianRupiah(200e6, o.each)])).toEqual([['1:anakL#1', 100e6], ['1:anakL#2', 100e6]]);
+  });
+  it('Pak Rahmat (Bab 13.3) dari contoh kasus: Rp 1 juta per saham', () => {
+    const p = preset('Munāsakhah: keluarga Pak Rahmat');
+    const m1 = { pewaris: p.pw, heirs: p.heirs };
+    const m = munasakhah(m1, lapisEfektif(m1, p.lapis));
+    const per = Object.fromEntries(m.orang.filter(o => o.saham > 0).map(o => [o.id, bagianRupiah(480e6, o.each)]));
+    expect(per).toEqual({ '1:istri#1': 88e6, '1:anakL#2': 168e6, '1:anakP#1': 84e6, '2:istri#1': 21e6, '2:anakL#1': 119e6 });
+  });
   it('semua contoh: dibagikan + selisih = harta bersih', () => {
     PRESETS.forEach(p => {
       const { H, bag } = rupiah(p);

@@ -108,6 +108,13 @@
           <button type="button" class="btn ghost" id="mahrum-add">+ Tambah kerabat maḥrūm</button>
         </details>
 
+        <details class="more" id="lapis-box">
+          <summary>Ada ahli waris yang wafat sebelum harta dibagi? (<i>munāsakhah</i>)</summary>
+          <p class="sub">Isi ahli waris di atas seperti keadaan <b>saat pewaris pertama wafat</b> (orang yang wafat belakangan tetap dihitung). Lalu tambahkan lapis di sini sesuai urutan wafat. Bagian orang itu berpindah kepada ahli warisnya sendiri (Bab 13).</p>
+          <div id="lapis-list"></div>
+          <button type="button" class="btn ghost" id="lapis-add">+ Tambah ahli waris yang wafat</button>
+        </details>
+
         <details class="more" id="khusus-box">
           <summary>Keadaan khusus (kandungan, orang hilang, dll.)</summary>
           <p class="sub">Keadaan berikut belum dihitung otomatis. Centang jika ada, supaya hasilnya diberi peringatan.</p>
@@ -126,7 +133,9 @@
           <div class="result-actions no-print">
             <button type="button" class="btn ghost" id="btn-simpan">Simpan</button>
             <button type="button" class="btn ghost" id="btn-bagikan">Bagikan</button>
-            <button type="button" class="btn" id="btn-cetak">Cetak / PDF</button>
+            <button type="button" class="btn ghost" id="btn-link">Salin link</button>
+            <button type="button" class="btn ghost" id="btn-cetak">Cetak / PDF</button>
+            <button type="button" class="btn" id="btn-ba">Berita acara</button>
           </div>
         </div>
         <div id="out" aria-live="polite"></div>
@@ -138,6 +147,15 @@
         <button type="button" class="btn" id="btn-next">Lanjut →</button>
       </div>
     </div>
+
+    <section class="card ba-view" id="ba-view" aria-labelledby="ba-judul" hidden>
+      <div class="ba-bar no-print">
+        <button type="button" class="btn ghost" id="ba-kembali">← Kembali ke hasil</button>
+        <p class="sub">Lengkapi isian, minta tanda tangan di layar (opsional), lalu cetak. Isian tersimpan di perangkat ini saja.</p>
+        <button type="button" class="btn" id="ba-cetak">Cetak / PDF</button>
+      </div>
+      <div id="ba-isi"></div>
+    </section>
 
     <aside class="preview no-print" aria-label="Ringkasan sementara">
       <div class="card">
@@ -160,6 +178,22 @@
       <p class="sub">Tersimpan hanya di perangkat ini.</p>
       <div id="riwayat-list"></div>
     </form>
+  </dialog>
+
+  <dialog id="dlg-ttd" aria-labelledby="dlg-ttd-h">
+    <div class="dlg">
+      <div class="dlg-head">
+        <h2 id="dlg-ttd-h">Tanda tangan</h2>
+        <button type="button" class="icon-btn" id="ttd-tutup" aria-label="Tutup">×</button>
+      </div>
+      <p class="sub" id="ttd-nama"></p>
+      <canvas id="ttd-canvas" class="ttd-canvas" width="900" height="360" aria-label="Area tanda tangan. Gores dengan jari atau mouse."></canvas>
+      <div class="row-actions">
+        <button type="button" class="btn ghost" id="ttd-hapus">Ulangi</button>
+        <button type="button" class="btn ghost" id="ttd-kosongkan">Hapus tanda tangan</button>
+        <button type="button" class="btn" id="ttd-simpan">Simpan</button>
+      </div>
+    </div>
   </dialog>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>

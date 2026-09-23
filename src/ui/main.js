@@ -1,15 +1,22 @@
 import './style.css';
-import { HEIRS, HEIR, SEBAB_MAHRUM, hitung, hartaBersih } from '../engine/index.js';
+import { HEIRS, HEIR, SEBAB_MAHRUM, hitung, hartaBersih, munasakhah, lapisEfektif, sarankanTautan, pecahId } from '../engine/index.js';
 import { PRESETS } from './presets.js';
 import { rp, parseRp, fmtAngka, esc } from './format.js';
-import { renderHasil, renderPreview, teksRingkasan, KEADAAN_KHUSUS } from './hasil.js';
+import { renderHasil, renderPreview, teksRingkasan, KEADAAN_KHUSUS, namaAkhir } from './hasil.js';
+import { renderBeritaAcara, baKosong, setBa, pasangPadTtd } from './berita-acara.js';
+import { buatLink, bacaLink } from './tautan.js';
 import * as store from './storage.js';
 
 const $ = sel => document.querySelector(sel);
 const $$ = sel => [...document.querySelectorAll(sel)];
 
-const kosong = () => ({ step: 1, nama: '', pw: 'L', heirs: {}, mahrum: [], harta: {}, barang: [], khusus: {} });
-let state = Object.assign(kosong(), store.bacaDraf() || {});
+const kosong = () => ({ step: 1, view: 'form', nama: '', pw: 'L', heirs: {}, mahrum: [], harta: {}, barang: [], khusus: {}, lapis: [], ba: baKosong() });
+const rapikan = s => { const st = Object.assign(kosong(), s); st.ba = Object.assign(baKosong(), st.ba || {}); return st; };
+
+// kasus dari link bagikan (#k=...) didahulukan daripada draf tersimpan
+const dariLink = bacaLink();
+let state = rapikan(dariLink ? { ...dariLink, step: 4 } : store.bacaDraf() || {});
+if (dariLink) history.replaceState(null, '', location.pathname + location.search);
 
 const MONEY = [
   { key: 'bersama', label: 'Harta bersama (gono-gini)', hint: 'Diperoleh selama menikah. Separuhnya milik pasangan yang masih hidup (KHI Ps. 96).' },
@@ -22,10 +29,15 @@ const MAIN_GROUPS = ['Pasangan', 'Orang tua dan leluhur', 'Keturunan', 'Saudara'
 
 // ---------- hitung ----------
 function jumlahAhliWaris() { return Object.values(state.heirs).reduce((a, b) => a + (+b || 0), 0); }
+const masalah1 = () => ({ pewaris: state.pw, heirs: state.heirs, mahrum: state.mahrum, harta: state.harta });
 function compute() {
   const hb = hartaBersih(state.harta);
-  const hasil = jumlahAhliWaris() ? hitung({ pewaris: state.pw, heirs: state.heirs, mahrum: state.mahrum, harta: state.harta }) : null;
-  return { hb, hasil };
+  const hasil = jumlahAhliWaris() ? hitung(masalah1()) : null;
+  let m = null, err = null;
+  if (hasil && state.lapis.some(l => l.wafat)) {
+    try { m = munasakhah(masalah1(), lapisEfektif(masalah1(), state.lapis)); } catch (e) { err = e.message; }
+  }
+  return { hb, hasil, m, err };
 }
 
 // ---------- langkah 1: pewaris ----------
@@ -38,7 +50,7 @@ $$('[data-pw]').forEach(b => b.addEventListener('click', () => {
   state.pw = b.dataset.pw;
   if (state.pw === 'L') delete state.heirs.suami; else delete state.heirs.istri;
   state.mahrum = state.mahrum.filter(m => !(HEIR[m.key].only && HEIR[m.key].only !== state.pw));
-  renderPewaris(); renderHeirs(); renderMahrum(); update();
+  renderPewaris(); renderHeirs(); renderMahrum(); renderLapis(); update();
 }));
 $('#nama-kasus').addEventListener('input', e => { state.nama = e.target.value; save(); });
 
@@ -105,25 +117,28 @@ $('#barang-pakai').addEventListener('click', () => {
 });
 
 // ---------- langkah 3: ahli waris ----------
-function renderHeirs() {
+/** Grid tombol −/+ untuk jumlah tiap ahli waris. idPrefix membedakan grid utama dan grid tiap lapis. */
+function gridAhliWaris(heirs, pw, idPrefix) {
   const groups = {};
-  HEIRS.forEach(h => { if (h.only && h.only !== state.pw) return; (groups[h.group] ||= []).push(h); });
+  HEIRS.forEach(h => { if (h.only && h.only !== pw) return; (groups[h.group] ||= []).push(h); });
   const block = g => `<fieldset><legend>${g}</legend>${groups[g].map(h => {
-    const v = state.heirs[h.key] || 0;
+    const v = heirs[h.key] || 0;
+    const id = `${idPrefix}-${h.key}`;
     return `<div class="heir${v ? ' on' : ''}">
-      <label for="h-${h.key}">${h.label}</label>
-      <span class="stepnum"><button type="button" data-k="${h.key}" data-d="-1" aria-label="Kurangi ${h.label}">−</button><input id="h-${h.key}" type="number" inputmode="numeric" min="0" max="${h.max}" value="${v}" data-k="${h.key}"><button type="button" data-k="${h.key}" data-d="1" aria-label="Tambah ${h.label}">+</button></span>
+      <label for="${id}">${h.label}</label>
+      <span class="stepnum"><button type="button" data-k="${h.key}" data-d="-1" aria-label="Kurangi ${h.label}">−</button><input id="${id}" type="number" inputmode="numeric" min="0" max="${h.max}" value="${v}" data-k="${h.key}"><button type="button" data-k="${h.key}" data-d="1" aria-label="Tambah ${h.label}">+</button></span>
     </div>`;
   }).join('')}</fieldset>`;
-  const lainOpen = HEIRS.some(h => h.group === 'Kerabat lain' && state.heirs[h.key]);
-  $('#heirs').innerHTML = MAIN_GROUPS.filter(g => groups[g]).map(block).join('')
+  const lainOpen = HEIRS.some(h => h.group === 'Kerabat lain' && heirs[h.key]);
+  return MAIN_GROUPS.filter(g => groups[g]).map(block).join('')
     + `<details class="more"${lainOpen ? ' open' : ''}><summary>Kerabat lain (keponakan, paman, sepupu)</summary>${block('Kerabat lain')}</details>`;
 }
-const setHeir = (k, v) => {
-  const h = HEIR[k];
-  const n = Math.max(0, Math.min(h.max, Math.floor(+v || 0)));
-  if (n) state.heirs[k] = n; else delete state.heirs[k];
+function renderHeirs() { $('#heirs').innerHTML = gridAhliWaris(state.heirs, state.pw, 'h'); }
+const setJumlah = (heirs, k, v) => {
+  const n = Math.max(0, Math.min(HEIR[k].max, Math.floor(+v || 0)));
+  if (n) heirs[k] = n; else delete heirs[k];
 };
+const setHeir = (k, v) => { setJumlah(state.heirs, k, v); renderLapis(); };
 $('#heirs').addEventListener('click', e => {
   const b = e.target.closest('button[data-k]'); if (!b) return;
   setHeir(b.dataset.k, (state.heirs[b.dataset.k] || 0) + (+b.dataset.d));
@@ -167,6 +182,75 @@ $('#khusus').addEventListener('change', e => {
   state.khusus[k] = e.target.checked; update();
 });
 
+// ---------- munāsakhah (lapis) ----------
+function renderLapis() {
+  const m1 = masalah1();
+  const ada = jumlahAhliWaris() > 0;
+  $('#lapis-add').disabled = !ada;
+  $('#lapis-list').innerHTML = state.lapis.map((lp, k) => {
+    const n = k + 2;
+    let kandidat = [], galat = null;
+    if (ada) {
+      try {
+        const sebelum = munasakhah(m1, lapisEfektif(m1, state.lapis.slice(0, k)));
+        kandidat = sebelum.orang.filter(o => o.saham > 0).map(o => ({ id: o.id, label: namaAkhir(o, sebelum) }));
+      } catch (e) { galat = e.message; }
+    }
+    const pilihWafat = `<select data-lp="${k}" data-lf="wafat" aria-label="Siapa yang wafat (lapis ${n})">
+      <option value="">— pilih ahli waris yang wafat —</option>
+      ${kandidat.map(c => `<option value="${c.id}"${c.id === lp.wafat ? ' selected' : ''}>${esc(c.label)}</option>`).join('')}</select>`;
+    let isi = '';
+    if (lp.wafat && kandidat.some(c => c.id === lp.wafat)) {
+      const D = kandidat.find(c => c.id === lp.wafat);
+      const g = HEIR[pecahId(lp.wafat).key].g;
+      const saran = sarankanTautan(m1, lp.wafat, lp.heirs);
+      const lain = kandidat.filter(c => c.id !== lp.wafat);
+      const baris = [];
+      Object.entries(lp.heirs).forEach(([key, cnt]) => {
+        for (let i = 1; i <= cnt; i++) {
+          const kunci = `${key}#${i}`;
+          const pilih = lp.tautan && kunci in lp.tautan ? lp.tautan[kunci] : saran[kunci] || '';
+          baris.push(`<div class="tautan-row"><span>${HEIR[key].label}${cnt > 1 ? ` ${i}` : ''}</span>
+            <select data-lp="${k}" data-lt="${kunci}" aria-label="${HEIR[key].label}${cnt > 1 ? ` ${i}` : ''} adalah">
+              <option value=""${!pilih ? ' selected' : ''}>Orang baru</option>
+              ${lain.map(c => `<option value="${c.id}"${c.id === pilih ? ' selected' : ''}>sama dengan: ${esc(c.label)}</option>`).join('')}</select></div>`);
+        }
+      });
+      isi = `<p class="sub">Ahli waris <b>${esc(D.label)}</b> (${g === 'L' ? 'laki-laki' : 'perempuan'}) yang masih hidup <b>saat ia wafat</b>:</p>
+        <div data-lp="${k}" data-lgrid>${gridAhliWaris(lp.heirs, g, `lp${k}`)}</div>
+        ${baris.length ? `<div class="tautan"><p class="sub"><b>Orang yang sama?</b> Jika ahli waris ini juga sudah tercatat sebelumnya (misalnya ibunya = istri pewaris pertama), tautkan supaya bagiannya dijumlahkan. Sudah diisi otomatis untuk kasus umum; periksa lagi.</p>${baris.join('')}</div>` : ''}`;
+    }
+    return `<div class="lapis-card">
+      <div class="lapis-head"><b>Lapis ${n}</b><button type="button" class="icon-btn x" data-ldel="${k}" aria-label="Hapus lapis ${n}">×</button></div>
+      ${galat ? `<p class="warn-text">${esc(galat)}</p>` : ''}
+      <label class="field"><span>Siapa yang wafat sebelum harta dibagi?</span>${pilihWafat}</label>
+      ${isi}
+    </div>`;
+  }).join('');
+  if (state.lapis.length) $('#lapis-box').open = true;
+}
+$('#lapis-add').addEventListener('click', () => {
+  state.lapis.push({ wafat: '', heirs: {}, tautan: {} }); renderLapis(); update();
+});
+$('#lapis-list').addEventListener('change', e => {
+  const el = e.target, k = el.closest('[data-lp]')?.dataset.lp; if (k == null) return;
+  const lp = state.lapis[+k];
+  if (el.dataset.lf === 'wafat') { lp.wafat = el.value; lp.heirs = {}; lp.tautan = {}; state.lapis.splice(+k + 1); }
+  else if (el.dataset.lt) lp.tautan[el.dataset.lt] = el.value;
+  else if (el.dataset.k) setJumlah(lp.heirs, el.dataset.k, el.value);
+  else return;
+  renderLapis(); update();
+});
+$('#lapis-list').addEventListener('click', e => {
+  const del = e.target.closest('[data-ldel]');
+  if (del) { state.lapis.splice(+del.dataset.ldel); renderLapis(); update(); return; } // lapis sesudahnya ikut terhapus
+  const b = e.target.closest('button[data-k]'); if (!b) return;
+  const k = +b.closest('[data-lp]').dataset.lp;
+  setJumlah(state.lapis[k].heirs, b.dataset.k, (state.lapis[k].heirs[b.dataset.k] || 0) + (+b.dataset.d));
+  renderLapis(); update();
+  $(`[data-lp="${k}"] button[data-k="${b.dataset.k}"][data-d="${b.dataset.d}"]`)?.focus();
+});
+
 // ---------- langkah 4: hasil ----------
 $('#out').addEventListener('change', e => {
   const i = e.target.dataset.barangOleh; if (i == null) return;
@@ -198,24 +282,73 @@ let saveTimer;
 function save() { clearTimeout(saveTimer); saveTimer = setTimeout(() => store.simpanDraf(state), 250); }
 
 function update() {
-  const { hb, hasil } = compute();
+  const { hb, hasil, m, err } = compute();
   renderFlow(hb);
-  $('#out').innerHTML = renderHasil(state, hasil, hb);
+  $('#out').innerHTML = renderHasil(state, hasil, hb, { m, err });
   $('#preview').innerHTML = renderPreview(hasil, hb);
   const n = jumlahAhliWaris();
-  $('#nav-mini').textContent = [n ? `${n} ahli waris` : 'Belum ada ahli waris', hb.bersih ? rp(hb.bersih) : ''].filter(Boolean).join(' · ');
+  $('#nav-mini').textContent = [n ? `${n} ahli waris` : 'Belum ada ahli waris', m ? `munāsakhah ${m.lapis.length + 1} lapis` : '', hb.bersih ? rp(hb.bersih) : ''].filter(Boolean).join(' · ');
+  if (state.view === 'ba') renderBa();
   save();
 }
 
 function renderAll() {
-  renderPewaris(); renderMoney(); renderBarangInput(); renderHeirs(); renderMahrum(); renderKhusus();
-  update(); goStep(state.step, { scroll: false });
+  renderPewaris(); renderMoney(); renderBarangInput(); renderHeirs(); renderMahrum(); renderKhusus(); renderLapis();
+  update(); goStep(state.step, { scroll: false }); setView(state.view, { scroll: false });
 }
 
 function muat(s) {
-  state = Object.assign(kosong(), structuredClone(s));
+  state = rapikan(structuredClone(s));
   renderAll();
 }
+
+// ---------- berita acara (Lampiran E) ----------
+function renderBa() {
+  const { hb, hasil, m } = compute();
+  $('#ba-isi').innerHTML = renderBeritaAcara(state, hasil, hb, m);
+}
+function setView(v, { scroll = true } = {}) {
+  state.view = v === 'ba' ? 'ba' : 'form';
+  const ba = state.view === 'ba';
+  document.body.dataset.view = state.view;
+  $('#ba-view').hidden = !ba;
+  if (ba) renderBa();
+  save();
+  if (scroll) window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+$('#btn-ba').addEventListener('click', () => {
+  if (!jumlahAhliWaris()) { toast('Isi ahli waris dulu.'); return; }
+  setView('ba');
+});
+$('#ba-kembali').addEventListener('click', () => setView('form'));
+$('#ba-cetak').addEventListener('click', () => window.print());
+// isian teks: simpan tanpa menggambar ulang supaya kursor tidak lompat
+$('#ba-isi').addEventListener('input', e => {
+  const path = e.target.dataset.ba; if (!path) return;
+  setBa(state.ba, path, e.target.value); save();
+});
+// nama ahli waris dipakai juga di tabel lain: gambar ulang setelah selesai mengetik
+$('#ba-isi').addEventListener('change', e => { if (e.target.dataset.ba?.startsWith('nama.') || e.target.dataset.ba?.startsWith('saksi.')) renderBa(); });
+
+const dlgTtd = $('#dlg-ttd');
+const pad = pasangPadTtd($('#ttd-canvas'));
+let ttdKey = null;
+$('#ba-isi').addEventListener('click', e => {
+  const b = e.target.closest('[data-ttd]'); if (!b) return;
+  ttdKey = b.dataset.ttd;
+  $('#ttd-nama').textContent = `Tanda tangan: ${b.dataset.ttdNama}`;
+  pad.bersihkan();
+  dlgTtd.showModal();
+});
+$('#ttd-hapus').addEventListener('click', () => pad.bersihkan());
+$('#ttd-tutup').addEventListener('click', () => dlgTtd.close());
+$('#ttd-kosongkan').addEventListener('click', () => { delete state.ba.ttd[ttdKey]; dlgTtd.close(); renderBa(); save(); });
+$('#ttd-simpan').addEventListener('click', () => {
+  const img = pad.hasil();
+  if (!img) { toast('Belum ada goresan tanda tangan.'); return; }
+  state.ba.ttd[ttdKey] = img; dlgTtd.close(); renderBa(); save();
+  toast('Tanda tangan disimpan di perangkat ini.');
+});
 
 // ---------- contoh kasus ----------
 const presetSel = $('#preset');
@@ -227,7 +360,7 @@ presetSel.addEventListener('change', () => {
   if (v === 'kosong') { muat(kosong()); toast('Formulir dikosongkan.'); }
   else if (v !== '') {
     const p = PRESETS[+v];
-    muat({ ...kosong(), step: 4, nama: p.nama, pw: p.pw, heirs: p.heirs, harta: p.harta, mahrum: p.mahrum || [], barang: p.barang || [] });
+    muat({ ...kosong(), step: 4, nama: p.nama, pw: p.pw, heirs: p.heirs, harta: p.harta, mahrum: p.mahrum || [], barang: p.barang || [], lapis: p.lapis || [] });
   }
   presetSel.value = '';
 });
@@ -245,7 +378,7 @@ function renderRiwayat() {
 $('#btn-riwayat').addEventListener('click', () => { renderRiwayat(); dlg.showModal(); });
 $('#riwayat-list').addEventListener('click', e => {
   const buka = e.target.closest('[data-buka]'), hapus = e.target.closest('[data-hapus]');
-  if (buka) { const r = store.daftarRiwayat().find(x => x.id === buka.dataset.buka); if (r) { muat({ ...r.state, step: 4 }); dlg.close(); toast('Kasus dibuka.'); } }
+  if (buka) { const r = store.daftarRiwayat().find(x => x.id === buka.dataset.buka); if (r) { muat({ ...r.state, step: 4, view: 'form' }); dlg.close(); toast('Kasus dibuka.'); } }
   if (hapus) { store.hapusRiwayat(hapus.dataset.hapus); renderRiwayat(); }
 });
 $('#btn-simpan').addEventListener('click', () => {
@@ -255,16 +388,23 @@ $('#btn-simpan').addEventListener('click', () => {
 });
 
 // ---------- bagikan & cetak ----------
+const linkKasus = () => buatLink(state, location.origin + location.pathname);
 $('#btn-bagikan').addEventListener('click', async () => {
-  const { hb, hasil } = compute();
+  const { hb, hasil, m } = compute();
   if (!hasil) { toast('Isi ahli waris dulu.'); return; }
-  const text = teksRingkasan(state, hasil, hb);
+  const url = linkKasus();
+  const text = teksRingkasan(state, hasil, hb, m) + `\n\nBuka perhitungan lengkapnya:\n${url}`;
   try {
     if (navigator.share) { await navigator.share({ title: 'Pembagian waris', text }); return; }
-    await navigator.clipboard.writeText(text); toast('Ringkasan disalin. Tinggal tempel di WhatsApp.');
+    await navigator.clipboard.writeText(text); toast('Ringkasan dan link disalin. Tinggal tempel di WhatsApp.');
   } catch (err) {
     if (err?.name !== 'AbortError') toast('Tidak bisa membagikan dari browser ini.');
   }
+});
+$('#btn-link').addEventListener('click', async () => {
+  if (!jumlahAhliWaris()) { toast('Isi ahli waris dulu.'); return; }
+  try { await navigator.clipboard.writeText(linkKasus()); toast('Link kasus disalin. Siapa pun yang membukanya melihat perhitungan yang sama.'); }
+  catch { prompt('Salin link ini:', linkKasus()); }
 });
 $('#btn-cetak').addEventListener('click', () => window.print());
 window.addEventListener('beforeprint', () => {
@@ -289,6 +429,15 @@ function toast(msg) {
 }
 
 renderAll();
+if (dariLink) toast('Kasus dari link dimuat.');
+// link ditempel di tab yang sudah terbuka
+window.addEventListener('hashchange', () => {
+  const data = bacaLink();
+  if (!data) return;
+  muat({ ...data, step: 4 });
+  history.replaceState(null, '', location.pathname + location.search);
+  toast('Kasus dari link dimuat.');
+});
 
 // ---------- PWA ----------
 if ('serviceWorker' in navigator && import.meta.env.PROD) {

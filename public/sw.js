@@ -1,6 +1,6 @@
 // Service worker FAROID: aplikasi tetap bisa dipakai tanpa internet.
 // Naikkan VERSI setiap rilis supaya cache lama dibersihkan.
-const VERSI = 'faroid-v3';
+const VERSI = 'faroid-v4';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon.svg', './icons/icon-192.png'];
 
 // nama file JS/CSS hasil build berhash, jadi dibaca dari index.html saat install

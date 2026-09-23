@@ -21,6 +21,9 @@ npm run preview   # mencoba hasil build (termasuk mode offline)
 - Penjelasan tujuh langkah hitung (Bab 10) dengan rujukan bab ebook.
 - Kerabat maḥrūm (pembunuh, beda agama) dan peringatan keadaan khusus yang belum dihitung otomatis.
 - Pembagian barang dan uang kompensasi (Bab 10.6).
+- Munāsakhah berlapis (ahli waris wafat sebelum harta dibagi, Bab 13) dengan asal masalah gabungan (al-jāmiʿah).
+- Link kasus yang bisa dibagikan: siapa pun yang membukanya melihat perhitungan yang sama. Data ada di bagian `#` link, tidak terkirim ke server.
+- Formulir Berita Acara Pembagian Harta Warisan (Lampiran E): terisi otomatis, tanda tangan di layar HP, siap cetak.
 - Bagikan ringkasan (WhatsApp), cetak/PDF, riwayat kasus di perangkat, mode gelap.
 - PWA: bisa dipasang di HP dan dipakai tanpa internet.
 

@@ -18,6 +18,8 @@ export const PRESETS = [
   },
   { nama: 'Bab 14 · Kasus 8: anak berbeda agama', pw: 'L', heirs: { istri: 1, anakL: 1, anakP: 1 }, mahrum: [{ key: 'anakL', n: 1, sebab: 'agama' }], harta: { bawaan: 240000000 } },
   { nama: 'Bab 14 · Kasus 9: cucu perempuan dan saudara', pw: 'L', heirs: { istri: 1, anakP: 1, cucuP: 1, sdrLK: 1 }, harta: { bawaan: 240000000 } },
+  { nama: 'Bab 14 · Kasus 10: munāsakhah Bu Mira lalu Pak Bayu', pw: 'P', heirs: { suami: 1, anakL: 2 }, harta: { bawaan: 200000000 }, lapis: [{ wafat: '1:suami#1', heirs: { anakL: 2 }, tautan: {} }] },
+  { nama: 'Munāsakhah: keluarga Pak Rahmat (Bab 13.3)', pw: 'L', heirs: { istri: 1, anakL: 2, anakP: 1 }, harta: { bawaan: 480000000 }, lapis: [{ wafat: '1:anakL#1', heirs: { istri: 1, ibu: 1, anakL: 1, sdrLK: 1, sdrPK: 1 }, tautan: {} }] },
   { nama: 'Al-Minbariyyah: ʿaul 24 → 27 (Bab 11.1)', pw: 'L', heirs: { istri: 1, anakP: 2, ayah: 1, ibu: 1 }, harta: { bawaan: 270000000 } },
   { nama: 'Al-Gharrāwain (Bab 11.3)', pw: 'P', heirs: { suami: 1, ayah: 1, ibu: 1 }, harta: { bawaan: 120000000 } },
   { nama: 'Al-Musyarrakah (Bab 11.4)', pw: 'P', heirs: { suami: 1, ibu: 1, sdrLI: 2, sdrLK: 1 }, harta: { bawaan: 180000000 } },

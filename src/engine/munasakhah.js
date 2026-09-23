@@ -74,7 +74,7 @@ export function munasakhah(masalah1, lapisList = []) {
           const label = labelOrang(r.key, i, r.n);
           const saham = aman(r.sahamEach * m2);
           const o = tambah(id, { lapis: n, key: r.key, label, saham });
-          penerima.push({ id, label, labelOrang: o.label, sahamLapis: r.sahamEach, saham, baru: id === idOrang(n, r.key, i) });
+          penerima.push({ id, key: r.key, label, labelOrang: o.label, bagian: r.each, sahamLapis: r.sahamEach, saham, baru: id === idOrang(n, r.key, i) });
         }
       });
       if (hasil.sisa.n) sisa = aman(sisa + (hasil.sisa.n * (A / hasil.sisa.d)) * m2);
@@ -130,6 +130,18 @@ export function sarankanTautan(masalah1, wafatId, heirsLapis) {
     pasang('anakP', ambil('anakP'));
   }
   return saran;
+}
+
+/**
+ * Tautan yang dipakai = saran otomatis, ditimpa pilihan pengguna.
+ * Di `lp.tautan`, nilai "" berarti pengguna memilih "orang baru" (tidak ditautkan).
+ */
+export function lapisEfektif(masalah1, lapisList = []) {
+  return lapisList.filter(lp => lp.wafat).map(lp => {
+    const gabung = { ...sarankanTautan(masalah1, lp.wafat, lp.heirs || {}), ...(lp.tautan || {}) };
+    Object.keys(gabung).forEach(k => { if (!gabung[k]) delete gabung[k]; });
+    return { ...lp, tautan: gabung };
+  });
 }
 
 export { fstr };
