@@ -60,7 +60,12 @@ export function daftarPenerima(hasil) {
  * Hasil: hak tiap orang, nilai barang yang diambil, dan selisih (+ menerima uang, − membayar).
  */
 export function kompensasi(hasil, H, barang = []) {
-  const penerima = daftarPenerima(hasil).map(p => ({ ...p, hak: bagianRupiah(H, p.each), ambil: 0, barang: [] }));
+  return kompensasiOrang(daftarPenerima(hasil), H, barang);
+}
+
+/** Sama seperti kompensasi(), tetapi dari daftar penerima [{ id, label, each }] (dipakai juga untuk munāsakhah). */
+export function kompensasiOrang(daftar, H, barang = []) {
+  const penerima = daftar.filter(p => p.each.n).map(p => ({ ...p, hak: bagianRupiah(H, p.each), ambil: 0, barang: [] }));
   const byId = Object.fromEntries(penerima.map(p => [p.id, p]));
   let totalBarang = 0, belumDipilih = 0;
   barang.forEach(b => {
