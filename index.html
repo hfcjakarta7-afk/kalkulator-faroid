@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Kalkulator FAROID</title>
+  <meta name="description" content="Hitung pembagian waris Islam (faraid) menurut fiqih mazhab Syafi'i, lengkap dengan langkah hitung dan catatan KHI. Pendamping ebook Dari Bingung Jadi Paham Waris.">
+  <meta name="theme-color" content="#0d3a2b">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Sans:wght@400;500;600;700&family=Noto+Serif:ital,wght@0,500;0,600;0,700;1,500&display=swap">
+  <script>
+    try { const t = localStorage.getItem('faroid.tema'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="emblem" aria-hidden="true"><span lang="ar">عِلْمُ الْفَرَائِضِ</span></div>
+      <div class="brand">
+        <p class="kicker">Pendamping ebook <i>Dari Bingung Jadi Paham Waris</i></p>
+        <h1>Kalkulator <span>FAROID</span></h1>
+        <p class="tagline">Siapa dapat berapa, dan kenapa. Fiqih mazhab Syafi'i, dengan catatan KHI.</p>
+      </div>
+      <div class="toolbar">
+        <label class="sr-only" for="preset">Muat contoh kasus</label>
+        <select id="preset" class="on-dark"></select>
+        <button type="button" class="icon-btn on-dark" id="btn-riwayat" aria-label="Riwayat kasus" title="Riwayat kasus">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8v4l3 2M3.05 11a9 9 0 1 1 .5 4M3 4v5h5"/></svg>
+        </button>
+        <button type="button" class="icon-btn on-dark" id="btn-tema" aria-label="Ganti tema terang/gelap" title="Ganti tema">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="stepper" aria-label="Langkah">
+    <ol>
+      <li><button type="button" data-go="1" aria-label="Langkah 1: Pewaris"><b>1</b><span>Pewaris</span></button></li>
+      <li><button type="button" data-go="2" aria-label="Langkah 2: Harta"><b>2</b><span>Harta</span></button></li>
+      <li><button type="button" data-go="3" aria-label="Langkah 3: Ahli waris"><b>3</b><span>Ahli waris</span></button></li>
+      <li><button type="button" data-go="4" aria-label="Langkah 4: Hasil"><b>4</b><span>Hasil</span></button></li>
+    </ol>
+  </nav>
+
+  <main class="layout" id="layout">
+    <div class="steps">
+      <!-- 1. Pewaris -->
+      <section class="card step" data-step="1" aria-labelledby="h1">
+        <p class="eyebrow">Langkah 1 · Bab 2</p>
+        <h2 id="h1">Data pewaris</h2>
+        <p class="sub">Pewaris (<i>muwarrits</i>) adalah orang yang wafat dan meninggalkan harta.</p>
+        <label class="field">
+          <span>Nama atau keterangan kasus <small>opsional, untuk riwayat dan cetakan</small></span>
+          <input id="nama-kasus" type="text" maxlength="80" placeholder="Contoh: Almarhum Bapak Umar">
+        </label>
+        <div class="field">
+          <span id="lbl-jk">Jenis kelamin pewaris</span>
+          <div class="seg" role="radiogroup" aria-labelledby="lbl-jk">
+            <button type="button" role="radio" data-pw="L">Laki-laki</button>
+            <button type="button" role="radio" data-pw="P">Perempuan</button>
+          </div>
+          <small class="hint" id="pw-hint"></small>
+        </div>
+        <div class="callout">
+          <b>Sebelum mulai, siapkan:</b>
+          <ul>
+            <li>Pohon keluarga pewaris: siapa saja yang masih hidup saat ia wafat.</li>
+            <li>Daftar harta, utang, dan wasiat beserta perkiraan nilainya.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 2. Harta -->
+      <section class="card step" data-step="2" aria-labelledby="h2">
+        <p class="eyebrow">Langkah 2 · Bab 3 dan 10.6</p>
+        <h2 id="h2">Harta dan kewajiban</h2>
+        <p class="sub">Isi dalam rupiah. Kosongkan yang tidak ada. Harta boleh dikosongkan jika hanya ingin melihat pecahannya.</p>
+        <div class="money" id="money"></div>
+        <div class="flow" id="flow" aria-live="polite"></div>
+
+        <details class="more" id="barang-box">
+          <summary>Harta berupa barang (rumah, tanah, kendaraan, emas)</summary>
+          <p class="sub">Catat barang beserta taksiran nilainya. Di halaman hasil kamu bisa memilih siapa yang mengambil tiap barang, lalu kalkulator menghitung uang pengganti (kompensasi).</p>
+          <div id="barang-list"></div>
+          <div class="row-actions">
+            <button type="button" class="btn ghost" id="barang-add">+ Tambah barang</button>
+            <button type="button" class="btn ghost" id="barang-pakai" hidden>Pakai total barang sebagai harta bawaan</button>
+          </div>
+        </details>
+      </section>
+
+      <!-- 3. Ahli waris -->
+      <section class="card step" data-step="3" aria-labelledby="h3">
+        <p class="eyebrow">Langkah 3 · Bab 2 dan 4</p>
+        <h2 id="h3">Ahli waris yang masih hidup</h2>
+        <p class="sub">Isi jumlah kerabat yang <b>masih hidup</b> saat pewaris wafat. Yang terhalang oleh kerabat lain (<i>maḥjūb</i>) tetap diisi, kalkulator akan mencoretnya sendiri.</p>
+        <div id="heirs"></div>
+
+        <details class="more" id="mahrum-box">
+          <summary>Ada kerabat yang membunuh pewaris atau berbeda agama?</summary>
+          <p class="sub">Mereka tidak mewarisi (<i>maḥrūm</i>) dan dianggap tidak ada: tidak mendapat bagian dan tidak menghalangi siapa pun (Bab 2.5). Jangan dimasukkan ke daftar di atas; catat di sini.</p>
+          <div id="mahrum-list"></div>
+          <button type="button" class="btn ghost" id="mahrum-add">+ Tambah kerabat maḥrūm</button>
+        </details>
+
+        <details class="more" id="khusus-box">
+          <summary>Keadaan khusus (kandungan, orang hilang, dll.)</summary>
+          <p class="sub">Keadaan berikut belum dihitung otomatis. Centang jika ada, supaya hasilnya diberi peringatan.</p>
+          <div class="checks" id="khusus"></div>
+        </details>
+      </section>
+
+      <!-- 4. Hasil -->
+      <section class="card step result" data-step="4" aria-labelledby="h4" id="hasil">
+        <div class="result-head">
+          <div>
+            <p class="eyebrow">Langkah 4 · Bab 5–11</p>
+            <h2 id="h4">Hasil pembagian</h2>
+            <p class="sub print-only" id="print-meta"></p>
+          </div>
+          <div class="result-actions no-print">
+            <button type="button" class="btn ghost" id="btn-simpan">Simpan</button>
+            <button type="button" class="btn ghost" id="btn-bagikan">Bagikan</button>
+            <button type="button" class="btn" id="btn-cetak">Cetak / PDF</button>
+          </div>
+        </div>
+        <div id="out" aria-live="polite"></div>
+      </section>
+
+      <div class="nav-bar no-print" id="nav-bar">
+        <button type="button" class="btn ghost" id="btn-prev">← Kembali</button>
+        <div class="nav-mini" id="nav-mini" aria-live="polite"></div>
+        <button type="button" class="btn" id="btn-next">Lanjut →</button>
+      </div>
+    </div>
+
+    <aside class="preview no-print" aria-label="Ringkasan sementara">
+      <div class="card">
+        <p class="eyebrow">Ringkasan sementara</p>
+        <div id="preview"></div>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="foot">
+    <p><b>Untuk edukasi.</b> Kalkulator ini mengikuti fiqih mazhab Syafi'i sebagaimana dijelaskan di ebook (Bab 4–13); KHI ditampilkan sebagai pembanding. Kasus <i>muʿāddah</i>, <i>dzawil arḥām</i>, anak dalam kandungan, orang hilang, <i>khuntsā</i>, dan <i>munāsakhah</i> belum dihitung otomatis. Untuk pembagian resmi atau sengketa, konsultasikan dengan ahli faraid atau Pengadilan Agama.</p>
+  </footer>
+
+  <dialog id="dlg-riwayat" aria-labelledby="dlg-riwayat-h">
+    <form method="dialog" class="dlg">
+      <div class="dlg-head">
+        <h2 id="dlg-riwayat-h">Riwayat kasus</h2>
+        <button class="icon-btn" value="tutup" aria-label="Tutup">×</button>
+      </div>
+      <p class="sub">Tersimpan hanya di perangkat ini.</p>
+      <div id="riwayat-list"></div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="./src/ui/main.js"></script>
+</body>
+</html>

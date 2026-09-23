@@ -1,0 +1,20 @@
+{
+  "name": "kalkulator-faroid",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Kalkulator waris Islam (faraid) mazhab Syafi'i, pendamping ebook \"Dari Bingung Jadi Paham Waris\"",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "ikon": "node scripts/ikon.js"
+  },
+  "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.1"
+  }
+}

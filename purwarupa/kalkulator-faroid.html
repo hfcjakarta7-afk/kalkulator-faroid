@@ -1,0 +1,663 @@
+<title>Kalkulator FAROID</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Sans:wght@400;500;600;700&family=Noto+Serif:wght@500;600;700&display=swap">
+<style>
+:root {
+  --bg: #eef2ec; --surface: #ffffff; --surface2: #f5f8f3; --ink: #13221b; --muted: #58695f; --line: #d5ded5;
+  --green: #1d5c40; --green-ink: #ffffff; --green-soft: #e2eee6; --gold: #9c7a26; --gold-soft: #f5ecd3;
+  --danger: #9e3a2c; --danger-soft: #f7e4e0; --info-soft: #e6eef6; --info: #2e5a86;
+  --serif: "Noto Serif", Georgia, "Times New Roman", serif;
+  --sans: "Noto Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --arab: "Amiri", "Traditional Arabic", "Noto Naskh Arabic", serif;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0c1511; --surface: #131f19; --surface2: #182620; --ink: #e6eee8; --muted: #9aaca1; --line: #26362d;
+    --green: #6dbb93; --green-ink: #0c1511; --green-soft: #1b3027; --gold: #d8b664; --gold-soft: #2d2816;
+    --danger: #e3907f; --danger-soft: #3a1f1a; --info-soft: #182a3a; --info: #8db8e3;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0c1511; --surface: #131f19; --surface2: #182620; --ink: #e6eee8; --muted: #9aaca1; --line: #26362d;
+  --green: #6dbb93; --green-ink: #0c1511; --green-soft: #1b3027; --gold: #d8b664; --gold-soft: #2d2816;
+  --danger: #e3907f; --danger-soft: #3a1f1a; --info-soft: #182a3a; --info: #8db8e3;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 48px; }
+header.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; padding-bottom: 18px; border-bottom: 1px solid var(--line); margin-bottom: 20px; }
+.brand h1 { font-family: var(--serif); font-size: clamp(1.6rem, 3vw, 2.2rem); margin: 0; letter-spacing: -.01em; text-wrap: balance; }
+.brand h1 span { color: var(--gold); }
+.brand p { margin: 4px 0 0; color: var(--muted); max-width: 62ch; }
+.brand .ar { font-family: var(--arab); font-size: 1.5rem; color: var(--gold); direction: rtl; margin: 0 0 2px; line-height: 1.4; }
+.preset { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.preset label { font-size: .75rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+select, input[type="number"], input[type="text"] {
+  font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-width: 0; max-width: 100%;
+}
+select:focus-visible, input:focus-visible, button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 20px; align-items: start; }
+@media (max-width: 900px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; min-width: 0; }
+.panel + .panel { margin-top: 16px; }
+.panel h2 { font-family: var(--serif); font-size: 1.15rem; margin: 0 0 4px; }
+.panel .sub { color: var(--muted); font-size: .88rem; margin: 0 0 14px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; background: var(--surface2); }
+.seg button { font: inherit; border: 0; background: transparent; color: var(--muted); padding: 6px 16px; border-radius: 999px; cursor: pointer; font-weight: 600; }
+.seg button[aria-pressed="true"] { background: var(--green); color: var(--green-ink); }
+fieldset { border: 0; padding: 0; margin: 0 0 14px; min-width: 0; }
+legend { font-size: .75rem; letter-spacing: .07em; text-transform: uppercase; color: var(--gold); font-weight: 700; margin-bottom: 6px; padding: 0; }
+.heir { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px dashed var(--line); }
+.heir:last-child { border-bottom: 0; }
+.heir label { font-size: .93rem; }
+.heir.on label { font-weight: 600; }
+.step { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface2); }
+.step button { width: 34px; height: 32px; border: 0; background: transparent; color: var(--ink); font-size: 1.1rem; cursor: pointer; }
+.step button:hover { background: var(--green-soft); }
+.step input { width: 42px; text-align: center; border: 0; border-inline: 1px solid var(--line); border-radius: 0; padding: 5px 2px; background: var(--surface); font-variant-numeric: tabular-nums; -moz-appearance: textfield; }
+.step input::-webkit-outer-spin-button, .step input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+details.more { margin-top: 4px; }
+details.more summary { cursor: pointer; color: var(--green); font-weight: 600; font-size: .9rem; padding: 6px 0; }
+.money { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 11rem); gap: 8px 12px; align-items: center; }
+.money label { font-size: .93rem; }
+.money small { display: block; color: var(--muted); font-size: .78rem; }
+.money input { text-align: right; font-variant-numeric: tabular-nums; width: 100%; }
+.flow { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 10px; display: grid; gap: 4px; font-size: .9rem; }
+.flow div { display: flex; justify-content: space-between; gap: 12px; }
+.flow div span:last-child { font-variant-numeric: tabular-nums; }
+.flow .net { font-weight: 700; font-size: 1rem; border-top: 1px solid var(--line); padding-top: 6px; margin-top: 4px; }
+.warn { color: var(--danger); font-size: .82rem; }
+.sticky { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
+@media (max-width: 900px) { .sticky { position: static; } }
+.summary { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.chip { display: inline-flex; flex-direction: column; padding: 8px 12px; border-radius: 8px; background: var(--surface2); border: 1px solid var(--line); min-width: 0; }
+.chip b { font-family: var(--serif); font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.chip span { font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.chip.gold { background: var(--gold-soft); border-color: transparent; }
+.chip.gold b { color: var(--gold); }
+.tablewrap { overflow-x: auto; margin: 0 -2px; }
+table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+th { text-align: left; font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 700; padding: 8px 8px; border-bottom: 2px solid var(--line); white-space: nowrap; }
+td { padding: 9px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+td .basis { display: block; color: var(--muted); font-size: .78rem; margin-top: 2px; }
+.frac { font-family: var(--serif); font-weight: 600; }
+tr.total td { font-weight: 700; border-bottom: 0; }
+.pill { display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .04em; padding: 2px 8px; border-radius: 999px; background: var(--green-soft); color: var(--green); white-space: nowrap; }
+.pill.gold { background: var(--gold-soft); color: var(--gold); }
+.blocked { margin-top: 14px; }
+.blocked h3, .notes h3, .assets h3 { font-family: var(--serif); font-size: 1rem; margin: 0 0 8px; }
+.blocked ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.blocked li { display: flex; flex-wrap: wrap; gap: 4px 10px; justify-content: space-between; padding: 8px 10px; border-radius: 8px; background: var(--danger-soft); font-size: .88rem; }
+.blocked li em { color: var(--danger); font-style: normal; font-weight: 600; }
+.notes { margin-top: 16px; display: grid; gap: 8px; }
+.note { border-left: 3px solid var(--gold); background: var(--gold-soft); padding: 10px 12px; border-radius: 0 8px 8px 0; font-size: .88rem; }
+.note b { display: block; font-family: var(--serif); margin-bottom: 2px; }
+.note.khi { border-left-color: var(--info); background: var(--info-soft); }
+.empty { color: var(--muted); padding: 24px 0; text-align: center; }
+.assets { margin-top: 18px; }
+.arow { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1.3fr) auto; gap: 8px; align-items: center; margin-bottom: 8px; }
+.arow input, .arow select { width: 100%; }
+.arow .x { border: 1px solid var(--line); background: var(--surface2); color: var(--muted); border-radius: 8px; width: 34px; height: 36px; cursor: pointer; }
+@media (max-width: 560px) { .arow { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .arow .x { justify-self: end; } }
+.btn { font: inherit; font-weight: 600; border: 1px solid var(--green); background: transparent; color: var(--green); border-radius: 8px; padding: 7px 14px; cursor: pointer; }
+.btn:hover { background: var(--green-soft); }
+.recv { color: var(--green); font-weight: 600; }
+.pay { color: var(--danger); font-weight: 600; }
+.foot { margin-top: 24px; color: var(--muted); font-size: .82rem; max-width: 80ch; }
+.foot b { color: var(--ink); }
+@media (prefers-reduced-motion: no-preference) { .result-anim { animation: fade .25s ease; } @keyframes fade { from { opacity: .4; } to { opacity: 1; } } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <p class="ar" lang="ar">عِلْمُ الْفَرَائِضِ</p>
+      <h1>Kalkulator <span>FAROID</span></h1>
+      <p>Hitung pembagian waris menurut fiqih mazhab Syafi'i, dengan catatan KHI. Pendamping ebook <i>Dari Bingung Jadi Paham Waris</i>.</p>
+    </div>
+    <div class="preset">
+      <label for="preset">Muat contoh kasus</label>
+      <select id="preset"></select>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div>
+      <section class="panel" aria-labelledby="h-pewaris">
+        <h2 id="h-pewaris">1. Pewaris</h2>
+        <p class="sub">Orang yang wafat dan meninggalkan harta.</p>
+        <div class="seg" role="group" aria-label="Jenis kelamin pewaris">
+          <button type="button" id="pw-L" aria-pressed="true">Laki-laki</button>
+          <button type="button" id="pw-P" aria-pressed="false">Perempuan</button>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-ahli">
+        <h2 id="h-ahli">2. Ahli waris yang masih hidup</h2>
+        <p class="sub">Isi jumlah kerabat yang masih hidup saat pewaris wafat. Jangan masukkan kerabat yang membunuh pewaris atau berbeda agama (Bab 2).</p>
+        <div id="heirs"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-harta">
+        <h2 id="h-harta">3. Harta dan kewajiban</h2>
+        <p class="sub">Dalam rupiah. Kosongkan yang tidak ada.</p>
+        <div class="money">
+          <label for="m-bersama">Harta bersama <small>diperoleh selama menikah; separuh untuk pasangan yang hidup (KHI Ps. 96)</small></label>
+          <input id="m-bersama" type="text" inputmode="numeric">
+          <label for="m-bawaan">Harta bawaan pewaris <small>milik pribadi, hibah, atau warisan yang diterima</small></label>
+          <input id="m-bawaan" type="text" inputmode="numeric">
+          <label for="m-jenazah">Biaya pengurusan jenazah</label>
+          <input id="m-jenazah" type="text" inputmode="numeric">
+          <label for="m-utang">Utang pewaris</label>
+          <input id="m-utang" type="text" inputmode="numeric">
+          <label for="m-wasiat">Wasiat <small>maksimal 1/3 setelah utang; bukan untuk ahli waris</small></label>
+          <input id="m-wasiat" type="text" inputmode="numeric">
+        </div>
+        <div class="flow" id="flow"></div>
+      </section>
+    </div>
+
+    <div class="sticky">
+      <section class="panel result-anim" aria-labelledby="h-hasil" id="result">
+        <h2 id="h-hasil">Hasil pembagian</h2>
+        <div id="out"></div>
+      </section>
+    </div>
+  </div>
+
+  <p class="foot"><b>Purwarupa.</b> Kalkulator ini mengikuti fiqih mazhab Syafi'i sebagaimana dijelaskan di ebook (Bab 4–13). Kasus langka seperti muʿāddah (kakek bersama saudara kandung dan seayah sekaligus), dzawil arḥām, anak dalam kandungan, orang hilang, dan munāsakhah belum dihitung otomatis. Untuk pembagian resmi atau sengketa, konsultasikan dengan ahli faraid atau Pengadilan Agama.</p>
+</div>
+
+<script>
+/* FAROID engine — perhitungan faraid mazhab Syafi'i (purwarupa).
+ * Rujukan aturan: ebook "Dari Bingung Jadi Paham Waris" (Abu Kautsar), Bab 4–11.
+ * Semua pecahan dihitung eksak (pembilang/penyebut bilangan bulat).
+ */
+(function (root) {
+  'use strict';
+  // ---------- pecahan ----------
+  const gcd = (a, b) => { a = Math.abs(a); b = Math.abs(b); while (b) { [a, b] = [b, a % b]; } return a || 1; };
+  const lcm = (a, b) => (a / gcd(a, b)) * b;
+  const F = (n, d = 1) => { if (d < 0) { n = -n; d = -d; } const g = gcd(n, d); return { n: n / g, d: d / g }; };
+  const add = (a, b) => F(a.n * b.d + b.n * a.d, a.d * b.d);
+  const sub = (a, b) => F(a.n * b.d - b.n * a.d, a.d * b.d);
+  const mul = (a, b) => F(a.n * b.n, a.d * b.d);
+  const div = (a, b) => F(a.n * b.d, a.d * b.n);
+  const cmp = (a, b) => a.n * b.d - b.n * a.d;
+  const ZERO = F(0), ONE = F(1);
+  const fstr = f => (f.n === 0 ? '0' : f.d === 1 ? String(f.n) : `${f.n}/${f.d}`);
+
+  // ---------- definisi ahli waris ----------
+  // key, label, gender ('L'/'P'), maks jumlah
+  const HEIRS = [
+    { key: 'suami', label: 'Suami', g: 'L', max: 1, group: 'Pasangan', only: 'P' },
+    { key: 'istri', label: 'Istri', g: 'P', max: 4, group: 'Pasangan', only: 'L' },
+    { key: 'ayah', label: 'Ayah', g: 'L', max: 1, group: 'Orang tua dan leluhur' },
+    { key: 'ibu', label: 'Ibu', g: 'P', max: 1, group: 'Orang tua dan leluhur' },
+    { key: 'kakek', label: 'Kakek (ayahnya ayah)', g: 'L', max: 1, group: 'Orang tua dan leluhur' },
+    { key: 'nenekIbu', label: 'Nenek (ibunya ibu)', g: 'P', max: 1, group: 'Orang tua dan leluhur' },
+    { key: 'nenekAyah', label: 'Nenek (ibunya ayah)', g: 'P', max: 1, group: 'Orang tua dan leluhur' },
+    { key: 'anakL', label: 'Anak laki-laki', g: 'L', max: 20, group: 'Keturunan' },
+    { key: 'anakP', label: 'Anak perempuan', g: 'P', max: 20, group: 'Keturunan' },
+    { key: 'cucuL', label: 'Cucu laki-laki (dari anak laki-laki)', g: 'L', max: 20, group: 'Keturunan' },
+    { key: 'cucuP', label: 'Cucu perempuan (dari anak laki-laki)', g: 'P', max: 20, group: 'Keturunan' },
+    { key: 'sdrLK', label: 'Saudara laki-laki kandung', g: 'L', max: 20, group: 'Saudara' },
+    { key: 'sdrPK', label: 'Saudara perempuan kandung', g: 'P', max: 20, group: 'Saudara' },
+    { key: 'sdrLA', label: 'Saudara laki-laki seayah', g: 'L', max: 20, group: 'Saudara' },
+    { key: 'sdrPA', label: 'Saudara perempuan seayah', g: 'P', max: 20, group: 'Saudara' },
+    { key: 'sdrLI', label: 'Saudara laki-laki seibu', g: 'L', max: 20, group: 'Saudara' },
+    { key: 'sdrPI', label: 'Saudara perempuan seibu', g: 'P', max: 20, group: 'Saudara' },
+    { key: 'kepLK', label: 'Keponakan laki-laki (dari saudara laki-laki kandung)', g: 'L', max: 20, group: 'Kerabat lain' },
+    { key: 'kepLA', label: 'Keponakan laki-laki (dari saudara laki-laki seayah)', g: 'L', max: 20, group: 'Kerabat lain' },
+    { key: 'pamanK', label: 'Paman kandung (saudara ayah)', g: 'L', max: 20, group: 'Kerabat lain' },
+    { key: 'pamanA', label: 'Paman seayah (saudara ayah)', g: 'L', max: 20, group: 'Kerabat lain' },
+    { key: 'sepK', label: 'Sepupu laki-laki (anak paman kandung)', g: 'L', max: 20, group: 'Kerabat lain' },
+    { key: 'sepA', label: 'Sepupu laki-laki (anak paman seayah)', g: 'L', max: 20, group: 'Kerabat lain' },
+  ];
+  const LABEL = Object.fromEntries(HEIRS.map(h => [h.key, h.label]));
+
+  /**
+   * hitung(input) → hasil
+   * input: { pewaris: 'L'|'P', heirs: {key: count}, harta: {...} }
+   */
+  function hitung(input) {
+    const c = {}; HEIRS.forEach(h => { c[h.key] = Math.max(0, Math.min(h.max, Math.floor(+((input.heirs || {})[h.key]) || 0))); });
+    if (input.pewaris === 'L') c.suami = 0; else c.istri = 0;
+    const notes = [];
+    const status = {}; // key -> {blockedBy?:string, share?:F, kind:string, basis:string}
+    const block = (k, by) => { if (c[k] > 0) status[k] = { blocked: true, by }; };
+
+    const fwL = c.anakL + c.cucuL > 0;               // far'u warits laki-laki
+    const fwP = c.anakP + c.cucuP > 0;
+    const fw = fwL || fwP;
+    const hasAyah = c.ayah > 0;
+    const kakekActive = !hasAyah && c.kakek > 0;
+    const totalSaudara = c.sdrLK + c.sdrPK + c.sdrLA + c.sdrPA + c.sdrLI + c.sdrPI; // termasuk yang terhalang
+
+    // ---------- 1. ḥajb ----------
+    if (hasAyah) block('kakek', 'ayah');
+    if (c.ibu) { block('nenekIbu', 'ibu'); block('nenekAyah', 'ibu'); }
+    if (hasAyah) block('nenekAyah', 'ayah');
+    if (c.anakL) { block('cucuL', 'anak laki-laki'); block('cucuP', 'anak laki-laki'); }
+    if (!c.anakL && c.anakP >= 2 && c.cucuL === 0) block('cucuP', '2 anak perempuan atau lebih');
+    // saudara seibu
+    const seibuBlk = fw ? 'keturunan (anak/cucu)' : hasAyah ? 'ayah' : kakekActive ? 'kakek' : null;
+    if (seibuBlk) { block('sdrLI', seibuBlk); block('sdrPI', seibuBlk); }
+    // saudara kandung
+    const kandungBlk = c.anakL ? 'anak laki-laki' : c.cucuL ? 'cucu laki-laki' : hasAyah ? 'ayah' : null;
+    if (kandungBlk) { block('sdrLK', kandungBlk); block('sdrPK', kandungBlk); }
+    const sdrPKmaaGhair = !kandungBlk && c.sdrLK === 0 && c.sdrPK > 0 && fwP;
+    // saudara seayah
+    let seayahBlk = kandungBlk || (c.sdrLK ? 'saudara laki-laki kandung' : sdrPKmaaGhair ? "saudara perempuan kandung (ʿaṣabah maʿa al-ghair)" : null);
+    if (seayahBlk) { block('sdrLA', seayahBlk); block('sdrPA', seayahBlk); }
+    if (!seayahBlk && c.sdrPK >= 2 && c.sdrLA === 0) block('sdrPA', '2 saudara perempuan kandung atau lebih');
+
+    // ---------- 2. bagian pasti ----------
+    const furudh = []; // {key, share(F) for whole group}
+    const addF = (k, s, basis) => { furudh.push({ key: k, share: s, basis }); status[k] = { share: s, kind: 'farḍ', basis }; };
+
+    if (c.suami) addF('suami', fw ? F(1, 4) : F(1, 2), fw ? 'Ada keturunan (farʿu wārits)' : 'Tidak ada keturunan');
+    if (c.istri) addF('istri', fw ? F(1, 8) : F(1, 4), (fw ? 'Ada keturunan' : 'Tidak ada keturunan') + (c.istri > 1 ? ', dibagi rata' : ''));
+
+    // Kasus khusus: al-Akdariyyah (suami, ibu, kakek, 1 saudara perempuan kandung/seayah; tanpa yang lain)
+    const others = Object.keys(c).filter(k => c[k] > 0);
+    const akdarSet = new Set(['suami', 'ibu', 'kakek']);
+    const akdarSis = c.sdrPK === 1 && c.sdrPA === 0 ? 'sdrPK' : c.sdrPA === 1 && c.sdrPK === 0 ? 'sdrPA' : null;
+    const isAkdariyyah = !hasAyah && c.suami && c.ibu && c.kakek && akdarSis && others.every(k => akdarSet.has(k) || k === akdarSis);
+
+    // Gharrawain: suami/istri + ayah + ibu saja (tanpa keturunan, tanpa 2+ saudara)
+    const spouse = c.suami || c.istri;
+    const gharrawain = spouse && hasAyah && c.ibu && !fw && totalSaudara < 2 &&
+      others.every(k => ['suami', 'istri', 'ayah', 'ibu', 'kakek', 'nenekIbu', 'nenekAyah', 'sdrLK', 'sdrPK', 'sdrLA', 'sdrPA', 'sdrLI', 'sdrPI'].includes(k));
+
+    if (c.ibu) {
+      if (fw || totalSaudara >= 2) addF('ibu', F(1, 6), fw ? 'Ada keturunan' : 'Ada dua saudara atau lebih');
+      else if (gharrawain) {
+        const sp = c.suami ? F(1, 2) : F(1, 4);
+        addF('ibu', mul(F(1, 3), sub(ONE, sp)), 'Al-Gharrāwain: 1/3 dari sisa setelah bagian ' + (c.suami ? 'suami' : 'istri'));
+        notes.push({ t: 'Kasus al-Gharrāwain', d: 'Ibu mendapat 1/3 dari sisa, bukan 1/3 dari seluruh harta (Bab 11.3; KHI Pasal 178 ayat 2).' });
+      } else addF('ibu', F(1, 3), 'Tidak ada keturunan dan kurang dari dua saudara');
+    }
+    // nenek
+    const nenekList = ['nenekIbu', 'nenekAyah'].filter(k => c[k] && !status[k]);
+    if (nenekList.length) {
+      const s = F(1, 6);
+      if (nenekList.length === 1) addF(nenekList[0], s, 'Tidak ada ibu');
+      else { furudh.push({ key: '_nenek', members: nenekList, share: s }); nenekList.forEach(k => { status[k] = { share: div(s, F(2)), kind: 'farḍ', basis: '1/6 dibagi dua nenek' }; }); }
+    }
+    // ayah / kakek (bagian pasti 1/6 bila ada keturunan)
+    const fatherKey = hasAyah ? 'ayah' : kakekActive ? 'kakek' : null;
+    if (fatherKey && fw) addF(fatherKey, F(1, 6), fwL ? 'Ada anak/cucu laki-laki' : 'Ada anak/cucu perempuan (ditambah sisa)');
+
+    // anak perempuan
+    if (c.anakP && !c.anakL) addF('anakP', c.anakP === 1 ? F(1, 2) : F(2, 3), c.anakP === 1 ? 'Satu orang, tanpa anak laki-laki' : 'Dua orang atau lebih, tanpa anak laki-laki');
+    // cucu perempuan
+    if (c.cucuP && !status.cucuP && !c.anakL && c.cucuL === 0) {
+      if (c.anakP === 1) addF('cucuP', F(1, 6), 'Penyempurna 2/3 bersama satu anak perempuan');
+      else if (c.anakP === 0) addF('cucuP', c.cucuP === 1 ? F(1, 2) : F(2, 3), 'Menempati posisi anak perempuan');
+    }
+    // saudara seibu
+    const nSeibu = (status.sdrLI ? 0 : c.sdrLI) + (status.sdrPI ? 0 : c.sdrPI);
+    // al-Musyarrakah
+    const musyarakah = nSeibu >= 2 && c.sdrLK > 0 && !kandungBlk && !kakekActive && c.suami && (c.ibu || nenekList.length) && !fw;
+    if (nSeibu) {
+      const s = nSeibu === 1 ? F(1, 6) : F(1, 3);
+      const members = ['sdrLI', 'sdrPI'].filter(k => c[k] && !status[k]);
+      if (musyarakah) members.push('sdrLK', 'sdrPK');
+      furudh.push({ key: '_seibu', members: members.filter(k => c[k]), share: s, equal: true });
+      const heads = members.filter(k => c[k]).reduce((a, k) => a + c[k], 0);
+      members.filter(k => c[k]).forEach(k => { status[k] = { share: mul(s, F(c[k], heads)), kind: 'farḍ', basis: musyarakah ? 'Al-Musyarrakah: berbagi 1/3 sama rata' : (nSeibu === 1 ? 'Satu saudara seibu' : 'Dua atau lebih, dibagi sama rata') }; });
+      if (musyarakah) notes.push({ t: 'Kasus al-Musyarrakah', d: 'Saudara kandung ikut berbagi 1/3 sama rata bersama saudara seibu (mazhab Syafiʿi, Bab 11.4).' });
+    }
+    // saudara perempuan kandung (bila tidak ada saudara laki-laki kandung, tidak ada keturunan)
+    if (c.sdrPK && !status.sdrPK && c.sdrLK === 0 && !fwP && !kakekActive) addF('sdrPK', c.sdrPK === 1 ? F(1, 2) : F(2, 3), c.sdrPK === 1 ? 'Satu orang' : 'Dua orang atau lebih');
+    // saudara perempuan seayah
+    if (c.sdrPA && !status.sdrPA && c.sdrLA === 0 && !fwP && !kakekActive) {
+      if (c.sdrPK === 1) addF('sdrPA', F(1, 6), 'Penyempurna 2/3 bersama satu saudara perempuan kandung');
+      else if (c.sdrPK === 0) addF('sdrPA', c.sdrPA === 1 ? F(1, 2) : F(2, 3), c.sdrPA === 1 ? 'Satu orang' : 'Dua orang atau lebih');
+    }
+
+    // ---------- 3. ʿaṣabah ----------
+    let asabah = null; // {members:[{key, weight}], basis}
+    const W = (k, g) => ({ key: k, weight: (g || HEIRS.find(h => h.key === k).g) === 'L' ? 2 : 1 });
+    const kakekWithSaudara = kakekActive && !fwL && !isAkdariyyah && ((c.sdrLK + c.sdrPK) > 0 || (c.sdrLA + c.sdrPA) > 0);
+    if (c.anakL) asabah = { members: [W('anakL'), ...(c.anakP ? [W('anakP')] : [])], basis: 'Anak laki-laki' + (c.anakP ? ' bersama anak perempuan (2 : 1)' : '') };
+    else if (c.cucuL) asabah = { members: [W('cucuL'), ...(c.cucuP && !status.cucuP?.share ? [W('cucuP')] : [])], basis: 'Cucu laki-laki' + (c.cucuP && !status.cucuP?.share ? ' bersama cucu perempuan (2 : 1)' : '') };
+    else if (fatherKey && !kakekWithSaudara) asabah = { members: [{ key: fatherKey, weight: 1 }], basis: fw ? '1/6 ditambah sisa' : 'Penerima sisa' };
+    else if (!kandungBlk && c.sdrLK && !musyarakah && !kakekWithSaudara) asabah = { members: [W('sdrLK'), ...(c.sdrPK ? [W('sdrPK')] : [])], basis: 'Saudara laki-laki kandung' + (c.sdrPK ? ' bersama saudara perempuan kandung (2 : 1)' : '') };
+    else if (sdrPKmaaGhair && !kakekWithSaudara) asabah = { members: [{ key: 'sdrPK', weight: 1 }], basis: 'ʿAṣabah maʿa al-ghair (bersama anak/cucu perempuan)' };
+    else if (!seayahBlk && c.sdrLA && !kakekWithSaudara) asabah = { members: [W('sdrLA'), ...(c.sdrPA && !status.sdrPA ? [W('sdrPA')] : [])], basis: 'Saudara laki-laki seayah' + (c.sdrPA && !status.sdrPA ? ' bersama saudara perempuan seayah (2 : 1)' : '') };
+    else if (!seayahBlk && c.sdrPA && fwP && c.sdrPK === 0 && !kakekWithSaudara) asabah = { members: [{ key: 'sdrPA', weight: 1 }], basis: 'ʿAṣabah maʿa al-ghair (bersama anak/cucu perempuan)' };
+    else if (!kakekWithSaudara) {
+      const chain = ['kepLK', 'kepLA', 'pamanK', 'pamanA', 'sepK', 'sepA'];
+      const first = chain.find(k => c[k]);
+      if (first) asabah = { members: [{ key: first, weight: 1 }], basis: 'Kerabat laki-laki terdekat (ʿaṣabah bi an-nafsi)' };
+    }
+    // mencoret ʿaṣabah bi an-nafsi yang lebih jauh
+    const nafsiOrder = ['anakL', 'cucuL', 'ayah', 'kakek', 'sdrLK', 'sdrLA', 'kepLK', 'kepLA', 'pamanK', 'pamanA', 'sepK', 'sepA'];
+    const topKey = asabah ? asabah.members[0].key : (kakekWithSaudara ? 'kakek' : (isAkdariyyah ? 'kakek' : null));
+    const levelOf = k => (k === 'sdrPK' ? nafsiOrder.indexOf('sdrLK') : k === 'sdrPA' ? nafsiOrder.indexOf('sdrLA') : nafsiOrder.indexOf(k));
+    const higherHolder = fatherKey || (c.anakL ? 'anakL' : c.cucuL ? 'cucuL' : null);
+    nafsiOrder.forEach(k => {
+      if (!c[k] || status[k]) return;
+      if (asabah && asabah.members.some(m => m.key === k)) return;
+      if (k === 'kakek' && (kakekWithSaudara || isAkdariyyah)) return;
+      if (['sdrLK', 'sdrLA'].includes(k) && (kakekWithSaudara || musyarakah)) return;
+      const lv = levelOf(k), top = topKey ? levelOf(topKey) : -1;
+      if (top >= 0 && lv > top) block(k, LABEL[topKey].toLowerCase());
+      else if (!topKey && higherHolder) block(k, LABEL[higherHolder].toLowerCase());
+    });
+    ['kepLK', 'kepLA', 'pamanK', 'pamanA', 'sepK', 'sepA'].forEach(k => { if (c[k] && !status[k] && kakekActive && !(asabah && asabah.members[0].key === k)) block(k, 'kakek'); });
+
+    // ---------- 4. kakek bersama saudara / akdariyyah ----------
+    let special = null;
+    if (isAkdariyyah) {
+      // suami 1/2, ibu 1/3, kakek 1/6, saudari 1/2 → ʿaul 9, lalu kakek+saudari (4) dibagi 2:1 → 27
+      status.suami = { share: F(9, 27), kind: 'farḍ', basis: 'Al-Akdariyyah' };
+      status.ibu = { share: F(6, 27), kind: 'farḍ', basis: 'Al-Akdariyyah' };
+      status.kakek = { share: F(8, 27), kind: 'khusus', basis: 'Al-Akdariyyah: gabungan dengan saudara perempuan, 2 : 1' };
+      status[akdarSis] = { share: F(4, 27), kind: 'khusus', basis: 'Al-Akdariyyah' };
+      special = { aul: true, am: 6, amAul: 9, final: 27 };
+      notes.push({ t: 'Kasus al-Akdariyyah', d: 'Diselesaikan menurut Zaid bin Tsābit: ʿaul ke 9, lalu taṣḥīḥ ke 27 (Bab 11.6).' });
+    }
+
+    // total furudh
+    let totalF = ZERO;
+    Object.keys(status).forEach(k => { if (status[k].share && status[k].kind === 'farḍ') totalF = add(totalF, status[k].share); });
+
+    if (kakekWithSaudara && !special) {
+      if (status.kakek && status.kakek.kind === 'farḍ') { totalF = sub(totalF, status.kakek.share); delete status.kakek; }
+      const rem = sub(ONE, totalF);
+      // saudara yang ikut dihitung: kandung bila ada, jika tidak seayah (penyederhanaan muʿāddah)
+      const useK = (c.sdrLK + c.sdrPK) > 0;
+      const sL = useK ? 'sdrLK' : 'sdrLA', sP = useK ? 'sdrPK' : 'sdrPA';
+      if (useK && (c.sdrLA + c.sdrPA) > 0) {
+        block('sdrLA', 'saudara kandung'); block('sdrPA', 'saudara kandung');
+        notes.push({ t: 'Perhatian: kasus muʿāddah', d: 'Ada saudara kandung dan seayah bersama kakek. Kalkulator menyederhanakan dengan tidak menghitung saudara seayah. Konsultasikan dengan ahli faraid (Bab 11.5).' });
+      }
+      const jat = 2 * c[sL] + c[sP];
+      const hasFurudh = totalF.n > 0;
+      const opts = [{ name: 'Berbagi (muqāsamah)', v: mul(rem, F(2, 2 + jat)) }];
+      if (hasFurudh) { opts.push({ name: '1/3 dari sisa', v: mul(rem, F(1, 3)) }, { name: '1/6 dari seluruh harta', v: F(1, 6) }); }
+      else opts.push({ name: '1/3 dari seluruh harta', v: F(1, 3) });
+      let best = opts[0]; opts.forEach(o => { if (cmp(o.v, best.v) > 0) best = o; });
+      if (cmp(best.v, rem) > 0) best = { name: '1/6 (ʿaul)', v: F(1, 6) };
+      status.kakek = { share: best.v, kind: 'khusus', basis: `Kakek bersama saudara: dipilih "${best.name}" (terbesar)` };
+      const restS = sub(rem, best.v);
+      const members = [sL, sP].filter(k => c[k]);
+      if (members.length && cmp(restS, ZERO) > 0) asabah = { members: members.map(k => W(k)), basis: 'Sisa setelah bagian kakek (2 : 1)', pool: restS };
+      else members.forEach(k => { status[k] = { share: ZERO, kind: 'ʿaṣabah', basis: 'Harta habis' }; });
+      totalF = add(totalF, best.v);
+      notes.push({ t: 'Kakek bersama saudara', d: 'Mengikuti pendapat Zaid bin Tsābit (mazhab Syafiʿi): kakek mendapat pilihan terbaik (Bab 11.5). Opsi: ' + opts.map(o => `${o.name} = ${fstr(o.v)}`).join('; ') + '.' });
+    }
+
+    // ---------- 5. ʿaul / radd / sisa ----------
+    let aul = false, radd = false, sisaBaitulMal = ZERO;
+    const shares = {}; // key -> F (untuk seluruh kelompok)
+    Object.keys(status).forEach(k => { if (status[k].share) shares[k] = status[k].share; });
+    const fard = { ...shares };
+    let totalShares = ZERO; Object.values(shares).forEach(s => { totalShares = add(totalShares, s); });
+
+    if (special) { /* sudah final */ }
+    else if (cmp(totalShares, ONE) > 0) {
+      aul = true;
+      Object.keys(shares).forEach(k => { shares[k] = div(shares[k], totalShares); });
+      if (asabah) asabah.members.forEach(m => {
+        if (shares[m.key] && shares[m.key].n) { status[m.key].basis = (status[m.key].basis || '') + '; tidak ada sisa'; }
+        else { status[m.key] = { share: ZERO, kind: 'ʿaṣabah', basis: asabah.basis + ' — harta habis' }; shares[m.key] = ZERO; }
+      });
+      notes.push({ t: 'ʿAul', d: `Jumlah bagian pasti (${fstr(totalShares)}) melebihi harta, sehingga semua bagian dikurangi secara seimbang (Bab 11.1; KHI Pasal 192).` });
+    } else {
+      const rem = asabah && asabah.pool ? asabah.pool : sub(ONE, totalShares);
+      if (asabah) {
+        const totalW = asabah.members.reduce((a, m) => a + m.weight * c[m.key], 0);
+        asabah.members.forEach(m => {
+          const s = mul(rem, F(m.weight * c[m.key], totalW));
+          const prev = shares[m.key] || ZERO;
+          shares[m.key] = add(prev, s);
+          status[m.key] = { share: shares[m.key], kind: prev.n ? 'farḍ + sisa' : 'ʿaṣabah', basis: (status[m.key] && status[m.key].basis && prev.n ? status[m.key].basis + '; ' : '') + asabah.basis };
+        });
+      } else if (rem.n > 0) {
+        const rk = Object.keys(shares).filter(k => !['suami', 'istri'].includes(k) && shares[k].n > 0);
+        if (rk.length) {
+          radd = true;
+          let base = ZERO; rk.forEach(k => { base = add(base, shares[k]); });
+          rk.forEach(k => { shares[k] = add(shares[k], mul(rem, div(shares[k], base))); });
+          notes.push({ t: 'Radd', d: 'Sisa harta dikembalikan kepada pemilik bagian pasti sesuai perbandingan bagiannya. Suami/istri tidak ikut radd menurut mazhab Syafiʿi (Bab 11.2). KHI Pasal 193 tidak tegas soal ini.' });
+        } else {
+          sisaBaitulMal = rem;
+          notes.push({ t: 'Sisa harta', d: `Masih tersisa ${fstr(rem)} tanpa penerima. Menurut mazhab Syafiʿi generasi belakangan, sisa diberikan kepada dzawil arḥām (kerabat jauh) bila ada; jika tidak ada, ke Baitul Māl (Bab 12.1).` });
+        }
+      }
+    }
+
+    // ---------- 6. per orang + asal masalah ----------
+    const rows = [];
+    HEIRS.forEach(h => {
+      const n = c[h.key]; if (!n) return;
+      const st = status[h.key] || {};
+      if (st.blocked) { rows.push({ key: h.key, label: h.label, n, blocked: true, by: st.by }); return; }
+      const g = shares[h.key] || ZERO;
+      rows.push({ key: h.key, label: h.label, n, group: g, each: div(g, F(n)), fard: fard[h.key] || null, kind: st.kind || '—', basis: st.basis || '' });
+    });
+    let denom = 1; rows.forEach(r => { if (r.each) denom = lcm(denom, r.each.d); });
+    if (sisaBaitulMal.n) denom = lcm(denom, sisaBaitulMal.d);
+    // asal masalah klasik (sebelum taṣḥīḥ): KPK penyebut bagian pasti per kelompok
+    const amParts = furudh.filter(x => x.share && x.share.n && (x.key.startsWith('_') || (status[x.key] && !status[x.key].blocked && status[x.key].kind !== 'khusus')));
+    let am = 1; amParts.forEach(x => { am = lcm(am, x.share.d); });
+    if (!amParts.length && asabah) am = asabah.members.reduce((a, m) => a + m.weight * c[m.key], 0);
+    let amAul = null; if (aul) { let s = 0; amParts.forEach(x => { s += x.share.n * (am / x.share.d); }); amAul = s; }
+    if (special) { am = special.am; amAul = special.amAul; }
+    rows.forEach(r => { if (r.each) { r.sahamEach = r.each.n * (denom / r.each.d); r.sahamGroup = r.sahamEach * r.n; } });
+
+    // khusus: catatan KHI
+    const khi = [];
+    if (input.harta && +input.harta.bersama > 0) khi.push('Separuh harta bersama dipisahkan untuk pasangan yang masih hidup sebelum dibagi waris (KHI Pasal 96).');
+    if (c.cucuL + c.cucuP === 0) khi.push('Jika ada anak pewaris yang wafat lebih dulu dan meninggalkan anak (cucu pewaris), menurut KHI Pasal 185 cucu tersebut dapat menjadi ahli waris pengganti. Kalkulator ini mengikuti fiqih Syafiʿi (Bab 12.6).');
+
+    return { counts: c, rows, denom, am, amAul, aul: aul || !!(special && special.aul), radd, sisa: sisaBaitulMal, notes, khi, tashih: denom !== (amAul || am) };
+  }
+
+  // ---------- harta ----------
+  function hartaBersih(h) {
+    const v = k => Math.max(0, +h[k] || 0);
+    const bagianPasangan = v('bersama') / 2;
+    const peninggalan = v('bersama') - bagianPasangan + v('bawaan');
+    const setelahJenazah = Math.max(0, peninggalan - v('jenazah'));
+    const setelahUtang = Math.max(0, setelahJenazah - v('utang'));
+    const batasWasiat = setelahUtang / 3;
+    const wasiat = Math.min(v('wasiat'), batasWasiat);
+    return { bagianPasangan, peninggalan, setelahJenazah, setelahUtang, batasWasiat, wasiat, wasiatDipotong: v('wasiat') > batasWasiat, bersih: setelahUtang - wasiat };
+  }
+
+  root.Faraid = { HEIRS, LABEL, hitung, hartaBersih, F, fstr, mul, add };
+  if (typeof module !== 'undefined') module.exports = root.Faraid;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+(function () {
+  const { HEIRS, hitung, hartaBersih, fstr } = window.Faraid;
+  const rp = v => 'Rp ' + Math.round(v).toLocaleString('id-ID');
+  const parseRp = s => +String(s || '').replace(/[^\d]/g, '') || 0;
+  const fmtInput = el => { const v = parseRp(el.value); el.value = v ? v.toLocaleString('id-ID') : ''; };
+
+  const PRESETS = [
+    { name: 'Kasus Pak Umar (Bab 10.5)', pw: 'L', heirs: { istri: 1, ayah: 1, ibu: 1, nenekIbu: 1, anakL: 1, anakP: 2, sdrLK: 2 }, harta: { bersama: 500000000, bawaan: 100000000, jenazah: 5000000, utang: 37000000, wasiat: 20000000 }, assets: [] },
+    { name: 'Harta berupa barang: Pak Budi (Bab 10.6)', pw: 'L', heirs: { istri: 1, anakL: 2, anakP: 1 }, harta: { bawaan: 1200000000 },
+      assets: [['Rumah dan tanahnya', 600000000, 'anakL#2'], ['Tanah kebun 1.000 m²', 300000000, 'anakL#1'], ['Mobil', 150000000, 'istri#1'], ['Motor', 20000000, 'anakL#1'], ['Emas 50 gram', 75000000, 'anakP#1'], ['Tabungan', 55000000, 'anakL#1']] },
+    { name: 'Al-Minbariyyah: ʿaul 24 → 27 (Bab 11.1)', pw: 'L', heirs: { istri: 1, anakP: 2, ayah: 1, ibu: 1 }, harta: { bawaan: 270000000 }, assets: [] },
+    { name: 'Radd: ibu dan 2 anak perempuan (Bab 14, Kasus 6)', pw: 'L', heirs: { ibu: 1, anakP: 2 }, harta: { bawaan: 100000000 }, assets: [] },
+    { name: 'Al-Gharrāwain: suami, ayah, ibu (Bab 11.3)', pw: 'P', heirs: { suami: 1, ayah: 1, ibu: 1 }, harta: { bawaan: 120000000 }, assets: [] },
+    { name: 'Al-Musyarrakah (Bab 11.4)', pw: 'P', heirs: { suami: 1, ibu: 1, sdrLI: 2, sdrLK: 1 }, harta: { bawaan: 180000000 }, assets: [] },
+    { name: 'Kakek bersama saudara (Bab 11.5)', pw: 'P', heirs: { suami: 1, ibu: 1, kakek: 1, sdrLK: 3 }, harta: { bawaan: 180000000 }, assets: [] },
+    { name: 'Al-Akdariyyah (Bab 11.6)', pw: 'P', heirs: { suami: 1, ibu: 1, kakek: 1, sdrPK: 1 }, harta: { bawaan: 270000000 }, assets: [] },
+    { name: 'Kosongkan formulir', pw: 'L', heirs: {}, harta: {}, assets: [] },
+  ];
+
+  const state = { pw: 'L', heirs: {}, harta: {}, assets: [] };
+  const heirsBox = document.getElementById('heirs');
+  const MAIN_GROUPS = ['Pasangan', 'Orang tua dan leluhur', 'Keturunan', 'Saudara'];
+
+  function renderHeirs() {
+    const groups = {};
+    HEIRS.forEach(h => { if (h.only && h.only !== state.pw) return; (groups[h.group] = groups[h.group] || []).push(h); });
+    let html = '';
+    const block = g => `<fieldset><legend>${g}</legend>${groups[g].map(h => `
+      <div class="heir${state.heirs[h.key] ? ' on' : ''}">
+        <label for="h-${h.key}">${h.label}</label>
+        <span class="step"><button type="button" data-k="${h.key}" data-d="-1" aria-label="Kurangi ${h.label}">−</button><input id="h-${h.key}" type="number" min="0" max="${h.max}" value="${state.heirs[h.key] || 0}" data-k="${h.key}"><button type="button" data-k="${h.key}" data-d="1" aria-label="Tambah ${h.label}">+</button></span>
+      </div>`).join('')}</fieldset>`;
+    MAIN_GROUPS.forEach(g => { if (groups[g]) html += block(g); });
+    const lainOpen = HEIRS.some(h => h.group === 'Kerabat lain' && state.heirs[h.key]);
+    html += `<details class="more"${lainOpen ? ' open' : ''}><summary>Kerabat lain (keponakan, paman, sepupu)</summary>${block('Kerabat lain')}</details>`;
+    heirsBox.innerHTML = html;
+  }
+  heirsBox.addEventListener('click', e => {
+    const b = e.target.closest('button[data-k]'); if (!b) return;
+    const h = HEIRS.find(x => x.key === b.dataset.k);
+    state.heirs[h.key] = Math.max(0, Math.min(h.max, (state.heirs[h.key] || 0) + (+b.dataset.d)));
+    renderHeirs(); document.querySelector(`button[data-k="${h.key}"][data-d="${b.dataset.d}"]`)?.focus(); update();
+  });
+  heirsBox.addEventListener('change', e => {
+    const i = e.target.closest('input[data-k]'); if (!i) return;
+    const h = HEIRS.find(x => x.key === i.dataset.k);
+    state.heirs[h.key] = Math.max(0, Math.min(h.max, Math.floor(+i.value || 0)));
+    renderHeirs(); update();
+  });
+
+  function setPw(p) {
+    state.pw = p;
+    document.getElementById('pw-L').setAttribute('aria-pressed', p === 'L');
+    document.getElementById('pw-P').setAttribute('aria-pressed', p === 'P');
+    if (p === 'L') delete state.heirs.suami; else delete state.heirs.istri;
+    renderHeirs(); update();
+  }
+  document.getElementById('pw-L').onclick = () => setPw('L');
+  document.getElementById('pw-P').onclick = () => setPw('P');
+
+  const MKEYS = ['bersama', 'bawaan', 'jenazah', 'utang', 'wasiat'];
+  MKEYS.forEach(k => {
+    const el = document.getElementById('m-' + k);
+    el.addEventListener('input', () => { state.harta[k] = parseRp(el.value); update(); });
+    el.addEventListener('blur', () => fmtInput(el));
+  });
+
+  function fillMoney() { MKEYS.forEach(k => { const el = document.getElementById('m-' + k); el.value = state.harta[k] ? (+state.harta[k]).toLocaleString('id-ID') : ''; }); }
+
+  // ---------- hasil ----------
+  const out = document.getElementById('out');
+  function heirOptions(rows) {
+    const opts = [];
+    rows.filter(r => !r.blocked && r.each.n).forEach(r => { for (let i = 1; i <= r.n; i++) opts.push({ v: `${r.key}#${i}`, t: r.n > 1 ? `${r.label} ${i}` : r.label, each: r.each }); });
+    return opts;
+  }
+
+  function update() {
+    const hb = hartaBersih(state.harta);
+    const flow = document.getElementById('flow');
+    const any = MKEYS.some(k => state.harta[k]);
+    flow.innerHTML = any ? `
+      ${state.harta.bersama ? `<div><span>Separuh harta bersama untuk pasangan</span><span>${rp(hb.bagianPasangan)}</span></div>` : ''}
+      <div><span>Harta peninggalan</span><span>${rp(hb.peninggalan)}</span></div>
+      ${state.harta.jenazah ? `<div><span>− Biaya jenazah</span><span>${rp(+state.harta.jenazah)}</span></div>` : ''}
+      ${state.harta.utang ? `<div><span>− Utang</span><span>${rp(+state.harta.utang)}</span></div>` : ''}
+      ${state.harta.wasiat ? `<div><span>− Wasiat${hb.wasiatDipotong ? ' (dibatasi 1/3)' : ''}</span><span>${rp(hb.wasiat)}</span></div>` : ''}
+      ${hb.wasiatDipotong ? `<div class="warn">Wasiat melebihi 1/3. Kelebihannya hanya sah jika semua ahli waris setuju (KHI Ps. 195).</div>` : ''}
+      <div class="net"><span>Harta bersih yang dibagi</span><span>${rp(hb.bersih)}</span></div>` : '';
+
+    const total = Object.values(state.heirs).reduce((a, b) => a + (+b || 0), 0);
+    if (!total) { out.innerHTML = `<p class="empty">Tambahkan minimal satu ahli waris untuk melihat pembagian.</p>`; return; }
+    const r = hitung({ pewaris: state.pw, heirs: state.heirs, harta: state.harta });
+    const H = hb.bersih;
+    const got = r.rows.filter(x => !x.blocked);
+    const blk = r.rows.filter(x => x.blocked);
+    let sumRp = 0;
+    const lines = got.map(x => {
+      const eachRp = Math.floor(H * x.each.n / x.each.d);
+      sumRp += eachRp * x.n;
+      return `<tr>
+        <td>${x.label}${x.n > 1 ? ` <span class="pill">${x.n} orang</span>` : ''}<span class="basis">${x.basis || ''}</span></td>
+        <td class="num"><span class="frac">${x.fard && x.fard.n ? fstr(x.fard) : '—'}</span><span class="basis">${x.kind}</span></td>
+        <td class="num"><span class="frac">${fstr(x.each)}</span><span class="basis">${x.sahamEach} saham</span></td>
+        <td class="num">${H ? rp(eachRp) : '—'}${x.n > 1 && H ? `<span class="basis">total ${rp(eachRp * x.n)}</span>` : ''}</td></tr>`;
+    }).join('');
+    const sisaRp = H - sumRp;
+    const status = r.aul ? `<div class="chip gold"><span>ʿAul</span><b>${r.am} → ${r.amAul}</b></div>` : r.radd ? `<div class="chip gold"><span>Radd</span><b>ya</b></div>` : '';
+    out.innerHTML = `
+      <div class="summary">
+        <div class="chip"><span>Asal masalah</span><b>${r.am}</b></div>
+        ${status}
+        ${r.tashih ? `<div class="chip"><span>Taṣḥīḥ</span><b>${r.denom}</b></div>` : ''}
+        <div class="chip"><span>Harta bersih</span><b>${H ? rp(H) : '—'}</b></div>
+      </div>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Ahli waris</th><th class="num">Bagian</th><th class="num">Per orang</th><th class="num">Rupiah / orang</th></tr></thead>
+        <tbody>${lines}
+        ${H ? `<tr class="total"><td>Jumlah dibagikan</td><td></td><td class="num">${r.sisa.n ? '' : '1'}</td><td class="num">${rp(sumRp)}</td></tr>` : ''}
+        </tbody></table></div>
+      ${H && sisaRp > 0 && !r.sisa.n ? `<p class="sub" style="margin-top:8px">Sisa pembulatan ${rp(sisaRp)} dibagikan sesuai kesepakatan keluarga (Bab 10.4).</p>` : ''}
+      ${!H ? `<p class="sub" style="margin-top:8px">Isi nilai harta di bagian 3 untuk melihat angka rupiah.</p>` : ''}
+      ${blk.length ? `<div class="blocked"><h3>Terhalang (tidak mendapat bagian)</h3><ul>${blk.map(x => `<li><span>${x.label}${x.n > 1 ? ` (${x.n})` : ''}</span><em>oleh ${x.by}</em></li>`).join('')}</ul></div>` : ''}
+      <div class="notes">${r.notes.map(n => `<div class="note"><b>${n.t}</b>${n.d}</div>`).join('')}
+        ${r.khi.map(k => `<div class="note khi"><b>Catatan KHI</b>${k}</div>`).join('')}</div>
+      ${H ? assetsHTML(r, H) : ''}`;
+    bindAssets(r, H);
+  }
+
+  // ---------- pembagian barang ----------
+  function assetsHTML(r, H) {
+    const opts = heirOptions(r.rows);
+    const optHtml = sel => `<option value="">— belum dipilih —</option>` + opts.map(o => `<option value="${o.v}"${o.v === sel ? ' selected' : ''}>${o.t}</option>`).join('');
+    const rows = state.assets.map((a, i) => `<div class="arow">
+        <input type="text" id="a-n-${i}" data-i="${i}" data-f="0" value="${a[0] || ''}" placeholder="Nama barang" aria-label="Nama barang">
+        <input type="text" id="a-v-${i}" data-i="${i}" data-f="1" value="${a[1] ? (+a[1]).toLocaleString('id-ID') : ''}" inputmode="numeric" placeholder="Nilai (Rp)" aria-label="Nilai taksiran">
+        <select id="a-h-${i}" data-i="${i}" data-f="2" aria-label="Diambil oleh">${optHtml(a[2])}</select>
+        <button type="button" class="x" data-del="${i}" aria-label="Hapus barang">×</button></div>`).join('');
+    // kompensasi
+    let comp = '';
+    const totalAset = state.assets.reduce((s, a) => s + (+a[1] || 0), 0);
+    if (state.assets.length) {
+      const per = {};
+      opts.forEach(o => { per[o.v] = { t: o.t, hak: Math.floor(H * o.each.n / o.each.d), ambil: 0 }; });
+      state.assets.forEach(a => { if (a[2] && per[a[2]]) per[a[2]].ambil += +a[1] || 0; });
+      const mismatch = Math.abs(totalAset - H) > 1;
+      comp = `<div class="tablewrap" style="margin-top:10px"><table><thead><tr><th>Ahli waris</th><th class="num">Hak</th><th class="num">Barang diambil</th><th class="num">Selisih</th></tr></thead><tbody>
+        ${Object.values(per).map(p => { const d = p.hak - p.ambil; return `<tr><td>${p.t}</td><td class="num">${rp(p.hak)}</td><td class="num">${rp(p.ambil)}</td><td class="num">${Math.abs(d) < 1 ? 'Pas' : d > 0 ? `<span class="recv">Menerima ${rp(d)}</span>` : `<span class="pay">Membayar ${rp(-d)}</span>`}</td></tr>`; }).join('')}
+        </tbody></table></div>
+        ${mismatch ? `<p class="warn">Total nilai barang (${rp(totalAset)}) belum sama dengan harta bersih (${rp(H)}). Pastikan semua harta sudah tercatat.</p>` : ''}
+        <p class="sub" style="margin-top:8px">Jika emas ditukar dengan uang dalam kompensasi, pembayarannya harus tunai saat itu juga (HR. Muslim no. 1587, Bab 10.6).</p>`;
+    }
+    return `<div class="assets"><h3>Pembagian barang dan kompensasi</h3>
+      <p class="sub">Opsional. Catat barang beserta taksirannya, lalu pilih siapa yang mengambil. Selisih nilai ditutup dengan uang pengganti.</p>
+      ${rows}<button type="button" class="btn" id="a-add">+ Tambah barang</button>${comp}</div>`;
+  }
+  function bindAssets() {
+    const add = document.getElementById('a-add'); if (!add) return;
+    add.onclick = () => { state.assets.push(['', 0, '']); update(); document.getElementById(`a-n-${state.assets.length - 1}`)?.focus(); };
+    out.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { state.assets.splice(+b.dataset.del, 1); update(); });
+    out.querySelectorAll('.arow input, .arow select').forEach(el => {
+      const i = +el.dataset.i, f = +el.dataset.f;
+      if (el.tagName === 'SELECT') el.onchange = () => { state.assets[i][2] = el.value; update(); };
+      else if (f === 1) el.onchange = () => { state.assets[i][1] = parseRp(el.value); update(); };
+      else el.onchange = () => { state.assets[i][0] = el.value; };
+    });
+  }
+
+  // ---------- preset ----------
+  const sel = document.getElementById('preset');
+  sel.innerHTML = PRESETS.map((p, i) => `<option value="${i}">${p.name}</option>`).join('');
+  function load(i) {
+    const p = PRESETS[i];
+    state.heirs = { ...p.heirs }; state.harta = { ...p.harta }; state.assets = p.assets.map(a => a.slice());
+    fillMoney(); setPw(p.pw);
+  }
+  sel.onchange = () => load(+sel.value);
+  load(0);
+})();
+</script>
